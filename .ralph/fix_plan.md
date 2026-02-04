@@ -58,35 +58,35 @@
 ## Phase 2: Domain Backup + Sync
 
 ### Domain Endpoint Setup
-- [ ] Design API schema for lifewithai.ai/memory/claude/ endpoint
-- [ ] Implement authentication mechanism (API key or signed requests)
-- [ ] Create endpoint for authenticated writes
-- [ ] Create endpoint for authenticated reads
-- [ ] Implement manifest.json for store versioning
+- [x] Design API schema for lifewithai.ai/memory/claude/ endpoint
+- [x] Implement authentication mechanism (API key or signed requests)
+- [x] Create endpoint for authenticated writes
+- [x] Create endpoint for authenticated reads
+- [x] Implement manifest.json for store versioning
 
 ### Sync Implementation
-- [ ] Build async sync from local to domain (non-blocking)
-- [ ] Implement write-through pattern: local first, then domain
-- [ ] Add sync queue for offline/retry scenarios
-- [ ] Target: local changes sync to domain within 30s
+- [x] Build async sync from local to domain (non-blocking)
+- [x] Implement write-through pattern: local first, then domain
+- [x] Add sync queue for offline/retry scenarios
+- [x] Target: local changes sync to domain within 30s
 
 ### Recovery Implementation
-- [ ] Build domain-to-local recovery mechanism
-- [ ] Implement full store restoration after local wipe
-- [ ] Create selective recovery (specific stores/date ranges)
+- [x] Build domain-to-local recovery mechanism
+- [x] Implement full store restoration after local wipe
+- [x] Create selective recovery (specific stores/date ranges)
 
 ### Conflict Detection
-- [ ] Implement version comparison between local and domain
-- [ ] Create conflict detection algorithm
-- [ ] Build conflict flagging system for guardian review
-- [ ] Define conflict resolution priority (domain > local for discrepancies)
+- [x] Implement version comparison between local and domain
+- [x] Create conflict detection algorithm
+- [x] Build conflict flagging system for guardian review
+- [x] Define conflict resolution priority (domain > local for discrepancies)
 
 ### Phase 2 Benchmarks
-- [ ] **TEST:** API endpoint accepts authenticated writes
-- [ ] **TEST:** Local changes sync to domain within 30s
-- [ ] **TEST:** Domain pull restores local state after simulated wipe
-- [ ] **TEST:** Conflict detection fires when stores diverge
-- [ ] **TEST:** Corrupt local store, recover from domain, verify no data loss
+- [x] **TEST:** API endpoint accepts authenticated writes
+- [x] **TEST:** Local changes sync to domain within 30s
+- [x] **TEST:** Domain pull restores local state after simulated wipe
+- [x] **TEST:** Conflict detection fires when stores diverge
+- [x] **TEST:** Corrupt local store, recover from domain, verify no data loss
 
 ---
 
@@ -293,6 +293,12 @@
   - Memory Router with backward-compatible markdown output
   - JSONL format with SHA256 checksums
   - All 7 benchmarks passing
+- [x] **Phase 2: Domain Backup + Sync** (2026-02-03)
+  - DomainSync with authenticated API access
+  - SyncQueue for offline/retry with exponential backoff
+  - ConflictDetector with resolution strategies
+  - Guardian review flagging for sensitive conflicts
+  - All 5 benchmarks passing
 
 ---
 
