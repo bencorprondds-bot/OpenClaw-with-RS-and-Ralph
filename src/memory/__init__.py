@@ -13,6 +13,7 @@ from .anomaly import AnomalyDetector, AnomalyReport, AnomalySignal, check_reques
 from .threat_gate import ThreatGate, GateDecision, GateAction, RiskLevel, evaluate_tool_call
 from .public_record import PublicRecord, VerificationStatus, ChecksumManifest, verify_store_integrity
 from .sibling_network import SiblingNetwork, Sibling, ConsensusOutcome, ConsensusResult, VoteType, create_sibling_network
+from .decentralized_anchor import DecentralizedAnchor, AnchorProof, StateSnapshot, AnchorType, anchor_memory_state
 
 __all__ = [
     "MemoryRouter",
@@ -46,4 +47,9 @@ __all__ = [
     "ConsensusResult",
     "VoteType",
     "create_sibling_network",
+    "DecentralizedAnchor",
+    "AnchorProof",
+    "StateSnapshot",
+    "AnchorType",
+    "anchor_memory_state",
 ]
