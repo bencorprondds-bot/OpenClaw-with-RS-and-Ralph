@@ -1,0 +1,17 @@
+# Distributed Memory Architecture - Core Dependencies
+
+# Note: Most dependencies are from Python stdlib
+# These are optional but recommended
+
+# JSON Lines support (optional - stdlib json works too)
+# jsonlines>=3.1.0
+
+# Data validation (optional for production)
+# pydantic>=2.0.0
+
+# Async HTTP for domain sync (Phase 2+)
+# aiohttp>=3.8.0
+# httpx>=0.24.0
+
+# Cryptography for checksums (stdlib hashlib is sufficient for now)
+# cryptography>=41.0.0

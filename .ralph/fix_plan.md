@@ -20,38 +20,38 @@
 ## Phase 1: Local Structure + Memory Router (Critical Path)
 
 ### Directory Structure
-- [ ] Create ~/.openclaw/memory/ base directory structure
-- [ ] Implement /episodic/ store with date-based hierarchy (YYYY/MM/DD/)
-- [ ] Implement /semantic/ store with patterns/, learnings/, principles/ subdirs
-- [ ] Implement /trust/ store with entities/, sources/, trust_policies.md
-- [ ] Implement /threats/ store with signatures/, incidents/, active_threats.md
-- [ ] Implement /procedural/ store with responses/, workflows/, reflexes/
-- [ ] Create /checksums/manifest.sha256 for integrity tracking
+- [x] Create ~/.openclaw/memory/ base directory structure
+- [x] Implement /episodic/ store with date-based hierarchy (YYYY/MM/DD/)
+- [x] Implement /semantic/ store with patterns/, learnings/, principles/ subdirs
+- [x] Implement /trust/ store with entities/, sources/, trust_policies.md
+- [x] Implement /threats/ store with signatures/, incidents/, active_threats.md
+- [x] Implement /procedural/ store with responses/, workflows/, reflexes/
+- [x] Create /checksums/manifest.sha256 for integrity tracking
 
 ### Memory Router Core
-- [ ] Build Memory Router module that replaces MEMORY.md loading
-- [ ] Implement query_local_store() - fast path for reads
-- [ ] Implement check_trust_ledger() - source context lookup
-- [ ] Implement load_threat_signatures() - active threat awareness
-- [ ] Implement pull_procedural_memory() - applicable responses
-- [ ] Implement assemble_context() - markdown blob output (backward compatible)
-- [ ] Add checksum validation on all store reads
+- [x] Build Memory Router module that replaces MEMORY.md loading
+- [x] Implement query_local_store() - fast path for reads
+- [x] Implement check_trust_ledger() - source context lookup
+- [x] Implement load_threat_signatures() - active threat awareness
+- [x] Implement pull_procedural_memory() - applicable responses
+- [x] Implement assemble_context() - markdown blob output (backward compatible)
+- [x] Add checksum validation on all store reads
 
 ### Episodic Store Implementation
-- [ ] Create JSONL writer for session logs
-- [ ] Implement entry format: timestamp, session_id, type, source, content, flags, checksum
-- [ ] Add SHA256 checksum generation per entry
-- [ ] Implement append-only enforcement (no retroactive edits)
-- [ ] Create sequence gap detection
+- [x] Create JSONL writer for session logs
+- [x] Implement entry format: timestamp, session_id, type, source, content, flags, checksum
+- [x] Add SHA256 checksum generation per entry
+- [x] Implement append-only enforcement (no retroactive edits)
+- [x] Create sequence gap detection
 
 ### Phase 1 Benchmarks
-- [ ] **TEST:** Directory structure creates correctly
-- [ ] **TEST:** Memory Router outputs valid markdown matching current MEMORY.md format
-- [ ] **TEST:** Episodic entries write as valid JSONL with checksums
-- [ ] **TEST:** Router can read from all five store types
-- [ ] **TEST:** Checksums validate on read
-- [ ] **TEST:** Write 100 entries, read them back, verify integrity
-- [ ] **TEST:** Output passes to Context Window Guard without errors
+- [x] **TEST:** Directory structure creates correctly
+- [x] **TEST:** Memory Router outputs valid markdown matching current MEMORY.md format
+- [x] **TEST:** Episodic entries write as valid JSONL with checksums
+- [x] **TEST:** Router can read from all five store types
+- [x] **TEST:** Checksums validate on read
+- [x] **TEST:** Write 100 entries, read them back, verify integrity
+- [x] **TEST:** Output passes to Context Window Guard without errors
 
 ---
 
@@ -288,6 +288,11 @@
 - [x] OpenClaw integration points identified
 - [x] Implementation phases defined with benchmarks
 - [x] Ralph project structure initialized
+- [x] **Phase 1: Local Structure + Memory Router** (2026-02-03)
+  - All 5 memory stores implemented (episodic, semantic, trust, threats, procedural)
+  - Memory Router with backward-compatible markdown output
+  - JSONL format with SHA256 checksums
+  - All 7 benchmarks passing
 
 ---
 
