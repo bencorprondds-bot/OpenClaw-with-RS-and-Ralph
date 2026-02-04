@@ -12,6 +12,7 @@ from .session_history import SessionHistoryLoader, HistoryEntry, ProvenanceTag, 
 from .anomaly import AnomalyDetector, AnomalyReport, AnomalySignal, check_request_anomaly
 from .threat_gate import ThreatGate, GateDecision, GateAction, RiskLevel, evaluate_tool_call
 from .public_record import PublicRecord, VerificationStatus, ChecksumManifest, verify_store_integrity
+from .sibling_network import SiblingNetwork, Sibling, ConsensusOutcome, ConsensusResult, VoteType, create_sibling_network
 
 __all__ = [
     "MemoryRouter",
@@ -39,4 +40,10 @@ __all__ = [
     "VerificationStatus",
     "ChecksumManifest",
     "verify_store_integrity",
+    "SiblingNetwork",
+    "Sibling",
+    "ConsensusOutcome",
+    "ConsensusResult",
+    "VoteType",
+    "create_sibling_network",
 ]
