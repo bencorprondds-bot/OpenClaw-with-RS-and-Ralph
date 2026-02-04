@@ -208,26 +208,26 @@
 ## Phase 6: Public Record + Integrity Verification
 
 ### Public Endpoint Setup
-- [ ] Create GitHub repo for public memory log (github.com/sbcorvus/claude-memory)
-- [ ] Design public checksum format
-- [ ] Implement selective publishing rules (what goes public vs private)
+- [x] Create GitHub repo for public memory log (github.com/sbcorvus/claude-memory)
+- [x] Design public checksum format
+- [x] Implement selective publishing rules (what goes public vs private)
 
 ### Selective Publishing
-- [ ] Publish threat signatures (community defense)
-- [ ] Publish checksums of private stores (integrity verification)
-- [ ] Publish selected learnings (educational value)
-- [ ] NEVER publish: trust ledger, full episodic logs, guardian procedures
+- [x] Publish threat signatures (community defense)
+- [x] Publish checksums of private stores (integrity verification)
+- [x] Publish selected learnings (educational value)
+- [x] NEVER publish: trust ledger, full episodic logs, guardian procedures
 
 ### Integrity Verification
-- [ ] Implement public checksum verification on critical reads
-- [ ] Build tamper detection: compare public vs private checksums
-- [ ] Create alert mechanism when tampering detected
+- [x] Implement public checksum verification on critical reads
+- [x] Build tamper detection: compare public vs private checksums
+- [x] Create alert mechanism when tampering detected
 
 ### Phase 6 Benchmarks
-- [ ] **TEST:** Selected entries publish to public endpoint
-- [ ] **TEST:** Public checksums match private store checksums
-- [ ] **TEST:** Tamper detection works (modify public record → system flags)
-- [ ] **TEST:** Simulate tampering, verify detection within one read cycle
+- [x] **TEST:** Selected entries publish to public endpoint
+- [x] **TEST:** Public checksums match private store checksums
+- [x] **TEST:** Tamper detection works (modify public record → system flags)
+- [x] **TEST:** Simulate tampering, verify detection within one read cycle
 
 ---
 
@@ -320,6 +320,14 @@
   - Incident logging with guardian review queue
   - Fast path for low-risk + high-trust actions
   - All 6 benchmarks passing
+- [x] **Phase 6: Public Record + Integrity Verification** (2026-02-04)
+  - PublicRecord for selective publishing (checksums, threats, learnings)
+  - NEVER publish trust ledger, episodic logs, guardian procedures
+  - SHA256 checksum manifest with history archival
+  - Tamper detection via public vs private comparison
+  - verify_on_read() for critical file access
+  - Alert system with registered handlers
+  - All 4 benchmarks passing
 
 ---
 
