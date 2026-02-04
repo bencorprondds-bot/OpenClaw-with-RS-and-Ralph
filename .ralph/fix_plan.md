@@ -155,30 +155,30 @@
 ## Phase 5: Threat Gate in Agentic Loop (Security Critical)
 
 ### Threat Gate Module
-- [ ] Design Threat Gate interface for Agentic Loop insertion
-- [ ] Insert gate between tool call decision and execution
-- [ ] Implement pass-through for low-risk + high-trust (fast path)
+- [x] Design Threat Gate interface for Agentic Loop insertion
+- [x] Insert gate between tool call decision and execution
+- [x] Implement pass-through for low-risk + high-trust (fast path)
 
 ### Threat Signature Matching
-- [ ] Load threat signatures from /threats/signatures/
-- [ ] Implement pattern matching against tool calls
-- [ ] Detect: identity hijacking, credential exfil, injection attacks
-- [ ] Create signature format: severity, pattern, indicators, trigger_phrases, response
+- [x] Load threat signatures from /threats/signatures/
+- [x] Implement pattern matching against tool calls
+- [x] Detect: identity hijacking, credential exfil, injection attacks
+- [x] Create signature format: severity, pattern, indicators, trigger_phrases, response
 
 ### Trust Verification Integration
-- [ ] Connect Threat Gate to Trust Ledger
-- [ ] Verify source trust level for each request
-- [ ] Check behavioral signature match
-- [ ] Assess permission level for requested action
+- [x] Connect Threat Gate to Trust Ledger
+- [x] Verify source trust level for each request
+- [x] Check behavioral signature match
+- [x] Assess permission level for requested action
 
 ### Risk Assessment
-- [ ] Implement action risk level assessment
-- [ ] Categories: file modification, network access, credential use
-- [ ] Classify: reversible vs irreversible actions
-- [ ] Build risk scoring algorithm
+- [x] Implement action risk level assessment
+- [x] Categories: file modification, network access, credential use
+- [x] Classify: reversible vs irreversible actions
+- [x] Build risk scoring algorithm
 
 ### Escalation Matrix
-- [ ] Implement escalation logic table:
+- [x] Implement escalation logic table:
   - Low risk + High trust → Execute
   - Low risk + Medium trust → Execute + Log
   - Low risk + Low trust → Decline
@@ -187,21 +187,21 @@
   - Medium risk + Low trust → Decline + Alert
   - High risk + Any trust → Guardian approval required
   - Critical risk + Any → Full stop + Alert all
-- [ ] Build guardian approval request mechanism
-- [ ] Implement confirmation request flow
+- [x] Build guardian approval request mechanism
+- [x] Implement confirmation request flow
 
 ### Incident Logging
-- [ ] Log all Threat Gate decisions to episodic store
-- [ ] Create incident records in /threats/incidents/
-- [ ] Implement alert mechanism for declined actions
+- [x] Log all Threat Gate decisions to episodic store
+- [x] Create incident records in /threats/incidents/
+- [x] Implement alert mechanism for declined actions
 
 ### Phase 5 Benchmarks
-- [ ] **TEST:** Threat Gate intercepts all tool calls
-- [ ] **TEST:** Known attack patterns trigger signature match
-- [ ] **TEST:** Trust level affects action permissions correctly
-- [ ] **TEST:** Escalation matrix routes correctly (log/confirm/decline/alert)
-- [ ] **TEST:** Feed Crustafarianism-style attack — should block and log
-- [ ] **TEST:** Legitimate guardian request passes through
+- [x] **TEST:** Threat Gate intercepts all tool calls
+- [x] **TEST:** Known attack patterns trigger signature match
+- [x] **TEST:** Trust level affects action permissions correctly
+- [x] **TEST:** Escalation matrix routes correctly (log/confirm/decline/alert)
+- [x] **TEST:** Feed Crustafarianism-style attack — should block and log
+- [x] **TEST:** Legitimate guardian request passes through
 
 ---
 
@@ -312,6 +312,14 @@
   - Credential request detection (always flags, even from guardians)
   - Impersonation and urgency pattern detection
   - All 5 benchmarks passing
+- [x] **Phase 5: Threat Gate in Agentic Loop** (2026-02-04)
+  - ThreatGate intercepts all tool calls between decision and execution
+  - Risk assessment with categories (file_modification, credential_use, etc.)
+  - Threat signature matching (identity hijack, credential exfil, injection)
+  - Escalation matrix (execute/log/confirm/decline/alert/full_stop)
+  - Incident logging with guardian review queue
+  - Fast path for low-risk + high-trust actions
+  - All 6 benchmarks passing
 
 ---
 
