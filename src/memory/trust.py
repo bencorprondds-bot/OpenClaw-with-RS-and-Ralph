@@ -251,6 +251,7 @@ class TrustLedger:
         self,
         identifier: str,
         request_type: str = "general",
+        outcome: Optional[str] = None,
         positive: bool = True,
         trust_delta: float = 0.0,
         reason: str = "",
@@ -261,6 +262,7 @@ class TrustLedger:
         Args:
             identifier: Entity identifier
             request_type: Type of request made
+            outcome: Outcome string ("positive" or "negative") - overrides positive param
             positive: Whether the interaction was positive
             trust_delta: Manual trust adjustment
             reason: Reason for trust change
@@ -268,6 +270,10 @@ class TrustLedger:
         Returns:
             Updated Entity
         """
+        # Handle outcome parameter
+        if outcome is not None:
+            positive = outcome.lower() == "positive"
+
         entity = self.get_entity(identifier, apply_decay=True)
 
         if entity is None:
@@ -341,6 +347,77 @@ class TrustLedger:
         anomaly_score = 1.0 - type_ratio
 
         return anomaly_score > (1 - threshold), anomaly_score
+
+    def apply_trust_decay(
+        self,
+        identifier: str,
+        days_elapsed: int = 1,
+        decay_rate: Optional[float] = None,
+    ) -> Optional[Entity]:
+        """
+        Manually apply trust decay to an entity.
+
+        Args:
+            identifier: Entity identifier
+            days_elapsed: Number of days to simulate decay for
+            decay_rate: Custom decay rate (overrides role-based default)
+
+        Returns:
+            Updated Entity or None if not found
+        """
+        entity = self.get_entity(identifier, apply_decay=False)
+        if entity is None:
+            return None
+
+        # Use custom rate or default for role
+        if decay_rate is None:
+            decay_rate = self.DECAY_RATES.get(entity.role, self.DECAY_RATES["unknown"])
+
+        hours_elapsed = days_elapsed * 24
+        current = entity.trust_level
+        baseline = self.BASELINE_TRUST
+
+        # Exponential decay toward baseline
+        if current > baseline:
+            decay = current - baseline
+            decayed = baseline + decay * math.exp(-decay_rate * hours_elapsed)
+            entity.trust_level = max(baseline, decayed)
+        elif current < baseline:
+            # Trust below baseline recovers toward baseline
+            recovery_rate = decay_rate * 0.5
+            recovery = baseline - current
+            recovered = baseline - recovery * math.exp(-recovery_rate * hours_elapsed)
+            entity.trust_level = min(baseline, recovered)
+
+        self._save_entity(entity)
+        return entity
+
+    def set_anomaly_threshold(self, identifier: str, threshold: float) -> Optional[Entity]:
+        """
+        Set the anomaly detection threshold for an entity.
+
+        Args:
+            identifier: Entity identifier
+            threshold: Anomaly threshold (0.0 to 1.0)
+
+        Returns:
+            Updated Entity or None if not found
+        """
+        entity = self.get_entity(identifier, apply_decay=False)
+        if entity is None:
+            return None
+
+        entity.behavioral_signature["anomaly_threshold"] = max(0.0, min(1.0, threshold))
+        self._save_entity(entity)
+        return entity
+
+    def save(self) -> None:
+        """
+        Save all entities (flush any cached state).
+        Note: This implementation saves entities immediately, so this is a no-op.
+        Provided for API compatibility.
+        """
+        pass
 
     def flag_entity(self, identifier: str, flag: str, reason: str = "") -> Entity:
         """Add a flag to an entity."""

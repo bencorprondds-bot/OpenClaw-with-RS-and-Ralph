@@ -120,35 +120,35 @@
 ## Phase 4: Trust Ledger + Anomaly Detection
 
 ### Entity Tracking
-- [ ] Implement entity record creation in /trust/entities/
-- [ ] Create entity format: identifier, type, role, trust_level, history, behavioral_signature
-- [ ] Build entity update mechanism for ongoing interactions
-- [ ] Implement interaction counting and last_interaction tracking
+- [x] Implement entity record creation in /trust/entities/
+- [x] Create entity format: identifier, type, role, trust_level, history, behavioral_signature
+- [x] Build entity update mechanism for ongoing interactions
+- [x] Implement interaction counting and last_interaction tracking
 
 ### Trust Decay System
-- [ ] Implement trust decay toward baseline (0.5) over time
-- [ ] Configure decay rates by relationship type (guardian=slow, unknown=fast)
-- [ ] Build trust reinforcement on positive interactions
-- [ ] Implement immediate trust reduction on negative events
+- [x] Implement trust decay toward baseline (0.5) over time
+- [x] Configure decay rates by relationship type (guardian=slow, unknown=fast)
+- [x] Build trust reinforcement on positive interactions
+- [x] Implement immediate trust reduction on negative events
 
 ### Behavioral Signatures
-- [ ] Build signature profiles from interaction history
-- [ ] Track typical_requests, communication_style patterns
-- [ ] Configure anomaly_threshold per entity
-- [ ] Create signature update mechanism as patterns evolve
+- [x] Build signature profiles from interaction history
+- [x] Track typical_requests, communication_style patterns
+- [x] Configure anomaly_threshold per entity
+- [x] Create signature update mechanism as patterns evolve
 
 ### Anomaly Detection
-- [ ] Implement request pattern matching against behavioral signature
-- [ ] Build anomaly scoring algorithm
-- [ ] Create flagging system for out-of-pattern requests
-- [ ] Example: "guardian asking for credentials" → flag
+- [x] Implement request pattern matching against behavioral signature
+- [x] Build anomaly scoring algorithm
+- [x] Create flagging system for out-of-pattern requests
+- [x] Example: "guardian asking for credentials" → flag
 
 ### Phase 4 Benchmarks
-- [ ] **TEST:** Entity records create/update correctly
-- [ ] **TEST:** Trust decay functions over configurable rate
-- [ ] **TEST:** Behavioral signatures build from interaction history
-- [ ] **TEST:** Anomaly detection fires on out-of-pattern requests
-- [ ] **TEST:** Simulate "guardian asking for credentials" — should flag
+- [x] **TEST:** Entity records create/update correctly
+- [x] **TEST:** Trust decay functions over configurable rate
+- [x] **TEST:** Behavioral signatures build from interaction history
+- [x] **TEST:** Anomaly detection fires on out-of-pattern requests
+- [x] **TEST:** Simulate "guardian asking for credentials" — should flag
 
 ---
 
@@ -305,6 +305,13 @@
   - Provenance tracking (source, trust, verified)
   - History merging with deduplication
   - All 4 benchmarks passing
+- [x] **Phase 4: Trust Ledger + Anomaly Detection** (2026-02-03)
+  - Entity tracking with trust levels and behavioral signatures
+  - Trust decay toward baseline (0.5) with role-based rates
+  - AnomalyDetector with multi-signal analysis
+  - Credential request detection (always flags, even from guardians)
+  - Impersonation and urgency pattern detection
+  - All 5 benchmarks passing
 
 ---
 
