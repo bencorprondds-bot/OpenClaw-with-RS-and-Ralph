@@ -93,27 +93,27 @@
 ## Phase 3: Session History Extension
 
 ### Episodic Query System
-- [ ] Extend Session History Loader to query episodic store
-- [ ] Implement relevance filtering by topic/keywords
-- [ ] Implement time-based filtering (max_age_days parameter)
-- [ ] Implement trust-level filtering (min_trust_level parameter)
+- [x] Extend Session History Loader to query episodic store
+- [x] Implement relevance filtering by topic/keywords
+- [x] Implement time-based filtering (max_age_days parameter)
+- [x] Implement trust-level filtering (min_trust_level parameter)
 
 ### Provenance Tracking
-- [ ] Tag all history entries with source provenance
-- [ ] Preserve provenance through context assembly
-- [ ] Create provenance display format for context window
+- [x] Tag all history entries with source provenance
+- [x] Preserve provenance through context assembly
+- [x] Create provenance display format for context window
 
 ### History Merging
-- [ ] Implement merge_with_provenance() function
-- [ ] Merge current session with relevant historical episodes
-- [ ] Handle deduplication of overlapping entries
-- [ ] Respect context window limits during merge
+- [x] Implement merge_with_provenance() function
+- [x] Merge current session with relevant historical episodes
+- [x] Handle deduplication of overlapping entries
+- [x] Respect context window limits during merge
 
 ### Phase 3 Benchmarks
-- [ ] **TEST:** Historical episodes retrieved by relevance
-- [ ] **TEST:** Trust filtering excludes low-trust sources
-- [ ] **TEST:** Provenance tags preserved through to context
-- [ ] **TEST:** Query "previous conversations about security" returns relevant episodes
+- [x] **TEST:** Historical episodes retrieved by relevance
+- [x] **TEST:** Trust filtering excludes low-trust sources
+- [x] **TEST:** Provenance tags preserved through to context
+- [x] **TEST:** Query "previous conversations about security" returns relevant episodes
 
 ---
 
@@ -299,6 +299,12 @@
   - ConflictDetector with resolution strategies
   - Guardian review flagging for sensitive conflicts
   - All 5 benchmarks passing
+- [x] **Phase 3: Session History Extension** (2026-02-03)
+  - SessionHistoryLoader with cross-session queries
+  - Relevance scoring and keyword filtering
+  - Provenance tracking (source, trust, verified)
+  - History merging with deduplication
+  - All 4 benchmarks passing
 
 ---
 
