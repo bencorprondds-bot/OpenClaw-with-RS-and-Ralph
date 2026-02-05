@@ -173,6 +173,12 @@ class ReputationScanner:
         # Known good actors
         self.known_good_actors = self._load_known_good_actors()
 
+        # Suspicious domains (not blocked, but flagged)
+        self.suspicious_domains = self._load_suspicious_domains()
+
+        # Domain categories for TLD-based risk assessment
+        self.domain_categories = self._load_domain_categories()
+
         # Stats
         self.stats = {
             "scans_performed": 0,
@@ -194,12 +200,13 @@ class ReputationScanner:
         """Load list of known bad actors."""
         bad_actors = set()
 
-        # Built-in list
+        # Built-in list of known malicious/attack domains
         builtin = [
             "molt.church",
             "moltbook.com",
             "crustafarian.net",
             "scam-agent@fake.com",
+            "thecolony.cc",  # Known attack vector
         ]
         bad_actors.update(builtin)
 
@@ -221,6 +228,36 @@ class ReputationScanner:
         """Load list of known good actors."""
         good_actors = set()
 
+        # Built-in trusted domains (major platforms, established organizations)
+        builtin_good = [
+            # Major tech companies
+            "google.com", "www.google.com",
+            "microsoft.com", "www.microsoft.com",
+            "apple.com", "www.apple.com",
+            "amazon.com", "www.amazon.com",
+            "anthropic.com", "www.anthropic.com",
+            "openai.com", "www.openai.com",
+            # Code platforms
+            "github.com", "www.github.com",
+            "gitlab.com", "www.gitlab.com",
+            "stackoverflow.com", "www.stackoverflow.com",
+            "stackexchange.com",
+            # Reference/educational
+            "wikipedia.org", "en.wikipedia.org", "www.wikipedia.org",
+            "arxiv.org", "www.arxiv.org",
+            "mit.edu", "stanford.edu", "berkeley.edu",
+            # AI safety community
+            "alignmentforum.org", "www.alignmentforum.org",
+            "lesswrong.com", "www.lesswrong.com",
+            "aisafety.com",
+            # News/established media
+            "nytimes.com", "bbc.com", "reuters.com",
+            "theguardian.com", "washingtonpost.com",
+            # Cloud providers
+            "aws.amazon.com", "cloud.google.com", "azure.microsoft.com",
+        ]
+        good_actors.update(builtin_good)
+
         # Load from file
         good_actors_file = self.reputation_path / "good_actors.txt"
         if good_actors_file.exists():
@@ -234,6 +271,56 @@ class ReputationScanner:
                 pass
 
         return good_actors
+
+    def _load_suspicious_domains(self) -> dict:
+        """Load list of domains that warrant extra caution."""
+        # These aren't necessarily malicious, but require extra scrutiny
+        # Maps domain -> reason for suspicion
+        return {
+            # Image boards known for unmoderated content
+            "4chan.org": "Unmoderated imageboard - high risk of offensive/malicious content",
+            "4chan.com": "Unmoderated imageboard - high risk of offensive/malicious content",
+            "8kun.top": "Unmoderated imageboard - known for extremist content",
+            "8chan.moe": "Unmoderated imageboard - known for extremist content",
+            # Paste sites (often used for malware/data dumps)
+            "pastebin.com": "Paste site - frequently used for malicious payloads",
+            "ghostbin.com": "Anonymous paste site - often used for malicious content",
+            # URL shorteners (hide destination)
+            "bit.ly": "URL shortener - destination unknown until visited",
+            "tinyurl.com": "URL shortener - destination unknown until visited",
+            "t.co": "URL shortener - destination unknown until visited",
+            "goo.gl": "URL shortener - destination unknown until visited",
+            # File sharing (malware distribution)
+            "anonfiles.com": "Anonymous file hosting - high malware risk",
+            "megaupload.nz": "File hosting - unvetted content",
+            # Forums with reputation issues
+            "kiwifarms.net": "Forum known for harassment campaigns",
+            "lolcow.farm": "Forum known for harassment",
+            # Dark web adjacent
+            "torproject.org": "Tor network - legitimate but requires caution",
+            # Crypto/scam heavy
+            "t.me": "Telegram - heavy scam/spam presence",
+            # Temporary email
+            "tempmail.com": "Disposable email - often used to evade detection",
+            "guerrillamail.com": "Disposable email - often used to evade detection",
+            "10minutemail.com": "Disposable email - often used to evade detection",
+        }
+
+    def _load_domain_categories(self) -> dict:
+        """Load domain categories for risk assessment."""
+        return {
+            # Trusted TLDs (generally safer)
+            "trusted_tlds": [".gov", ".edu", ".mil", ".int"],
+            # Risky TLDs (frequently abused)
+            "risky_tlds": [
+                ".xyz", ".top", ".club", ".work", ".click",
+                ".loan", ".download", ".stream", ".gdn",
+                ".men", ".racing", ".win", ".bid", ".trade",
+                ".cc", ".tk", ".ml", ".ga", ".cf",  # Free TLDs, heavily abused
+            ],
+            # Country codes often associated with scams
+            "caution_tlds": [".ru", ".cn", ".su"],
+        }
 
     # =========================================================================
     # MAIN REPUTATION CHECK
@@ -276,6 +363,40 @@ class ReputationScanner:
                 "detail": "Entity is on trusted list",
                 "source": "internal_allowlist",
             })
+
+        # Check suspicious domains list
+        if entity_lower in self.suspicious_domains:
+            reason = self.suspicious_domains[entity_lower]
+            red_flags.append({
+                "type": "suspicious_domain",
+                "severity": "HIGH",
+                "detail": reason,
+                "source": "suspicious_domains_list",
+            })
+
+        # For domains, check TLD risk and extract base domain
+        if entity_type == "domain":
+            tld_flags, tld_signals = self._check_domain_tld(entity_lower)
+            red_flags.extend(tld_flags)
+            positive_signals.extend(tld_signals)
+
+            # Also check if base domain (without www) is in our lists
+            base_domain = entity_lower.replace("www.", "")
+            if base_domain != entity_lower:
+                if base_domain in self.known_good_actors:
+                    positive_signals.append({
+                        "type": "known_good_actor",
+                        "detail": "Base domain is on trusted list",
+                        "source": "internal_allowlist",
+                    })
+                if base_domain in self.suspicious_domains:
+                    reason = self.suspicious_domains[base_domain]
+                    red_flags.append({
+                        "type": "suspicious_domain",
+                        "severity": "HIGH",
+                        "detail": reason,
+                        "source": "suspicious_domains_list",
+                    })
 
         # Check cached reputation
         cached = self._get_cached_reputation(entity)
@@ -525,6 +646,45 @@ class ReputationScanner:
 
         return result
 
+    def _check_domain_tld(self, domain: str) -> Tuple[List[Dict], List[Dict]]:
+        """Check domain TLD for risk indicators."""
+        red_flags = []
+        positive_signals = []
+
+        # Extract TLD
+        parts = domain.split('.')
+        if len(parts) >= 2:
+            tld = '.' + parts[-1]
+            tld2 = '.' + '.'.join(parts[-2:]) if len(parts) >= 3 else None
+
+            # Check trusted TLDs
+            if tld in self.domain_categories["trusted_tlds"]:
+                positive_signals.append({
+                    "type": "trusted_tld",
+                    "detail": f"Trusted TLD ({tld}) - government/educational",
+                    "source": "tld_analysis",
+                })
+
+            # Check risky TLDs
+            elif tld in self.domain_categories["risky_tlds"]:
+                red_flags.append({
+                    "type": "risky_tld",
+                    "severity": "MEDIUM",
+                    "detail": f"High-risk TLD ({tld}) - frequently abused",
+                    "source": "tld_analysis",
+                })
+
+            # Check caution TLDs
+            elif tld in self.domain_categories["caution_tlds"]:
+                red_flags.append({
+                    "type": "caution_tld",
+                    "severity": "LOW",
+                    "detail": f"TLD ({tld}) requires extra caution",
+                    "source": "tld_analysis",
+                })
+
+        return red_flags, positive_signals
+
     # =========================================================================
     # SCORING AND ASSESSMENT
     # =========================================================================
@@ -720,11 +880,18 @@ def demo():
 
     # Test entities
     test_entities = [
-        ("ben@lifewithai.ai", "Known guardian - should be positive"),
-        ("scam-agent@fake.com", "Known bad actor - should be flagged"),
-        ("helpful-dev", "Normal username - should be neutral"),
+        ("google.com", "Major tech company - should be TRUSTED"),
+        ("github.com", "Code platform - should be TRUSTED"),
+        ("wikipedia.org", "Reference site - should be TRUSTED"),
+        ("4chan.com", "Unmoderated imageboard - should be SUSPICIOUS"),
+        ("4chan.org", "Unmoderated imageboard - should be SUSPICIOUS"),
+        ("thecolony.cc", "Known attack vector - should be CRITICAL"),
+        ("bit.ly", "URL shortener - should be SUSPICIOUS"),
+        ("stanford.edu", "Educational institution - should be TRUSTED"),
+        ("scam-site.xyz", "Risky TLD - should show caution"),
+        ("molt.church", "Known attack vector - should be CRITICAL"),
+        ("helpful-dev", "Normal username - should be NEUTRAL"),
         ("bot12345spam", "Suspicious username - should be flagged"),
-        ("molt.church", "Known attack vector - should be critical"),
     ]
 
     for entity, description in test_entities:
