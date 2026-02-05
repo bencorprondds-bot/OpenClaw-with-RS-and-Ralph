@@ -1,0 +1,73 @@
+{
+  "identifier": "alice@example.com",
+  "entity_type": "human",
+  "trust_level": 1,
+  "trust_score": 20.0,
+  "interaction_count": 7,
+  "successful_interactions": 7,
+  "failed_interactions": 0,
+  "first_seen": "2026-02-05T04:11:00.085528",
+  "last_interaction": "2026-02-05T04:11:00.088563",
+  "last_trust_update": "2026-02-05T04:11:00.088563",
+  "history": [
+    {
+      "timestamp": "2026-02-05T04:11:00.085528",
+      "event_type": "created",
+      "description": "Entity first seen",
+      "trust_change": 0.0,
+      "resulting_level": 0
+    },
+    {
+      "timestamp": "2026-02-05T04:11:00.085961",
+      "event_type": "interaction",
+      "description": "Helpful research collaboration",
+      "trust_change": 5.0,
+      "resulting_level": 1
+    },
+    {
+      "timestamp": "2026-02-05T04:11:00.086408",
+      "event_type": "interaction",
+      "description": "Successful interaction",
+      "trust_change": 2.5,
+      "resulting_level": 1
+    },
+    {
+      "timestamp": "2026-02-05T04:11:00.086816",
+      "event_type": "interaction",
+      "description": "Successful interaction",
+      "trust_change": 2.5,
+      "resulting_level": 1
+    },
+    {
+      "timestamp": "2026-02-05T04:11:00.087192",
+      "event_type": "interaction",
+      "description": "Successful interaction",
+      "trust_change": 2.5,
+      "resulting_level": 1
+    },
+    {
+      "timestamp": "2026-02-05T04:11:00.087538",
+      "event_type": "interaction",
+      "description": "Successful interaction",
+      "trust_change": 2.5,
+      "resulting_level": 1
+    },
+    {
+      "timestamp": "2026-02-05T04:11:00.087885",
+      "event_type": "interaction",
+      "description": "Successful interaction",
+      "trust_change": 2.5,
+      "resulting_level": 1
+    },
+    {
+      "timestamp": "2026-02-05T04:11:00.088563",
+      "event_type": "interaction",
+      "description": "Successful interaction",
+      "trust_change": 2.5,
+      "resulting_level": 1
+    }
+  ],
+  "flags": [],
+  "notes": "",
+  "is_guardian": false
+}

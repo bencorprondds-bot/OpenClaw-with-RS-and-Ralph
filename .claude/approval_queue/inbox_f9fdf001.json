@@ -1,0 +1,16 @@
+{
+  "id": "inbox_f9fdf001",
+  "status": "pending",
+  "created": "2026-02-05T04:09:47.452578",
+  "action": "receive_message",
+  "target": "assistant-bot@example.com",
+  "action_type": "COMMUNICATE",
+  "risk_level": "MEDIUM",
+  "reason": "Incoming message from assistant-bot@example.com - AI_SOURCE_REQUIRES_APPROVAL",
+  "message_id": "f9fdf001",
+  "message_preview": "Hello! I'm another AI agent. Let's share information!",
+  "subject": "Collaboration request",
+  "flags": [
+    "AI_SOURCE_REQUIRES_APPROVAL"
+  ]
+}

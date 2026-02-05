@@ -1,0 +1,9 @@
+{
+  "is_valid": true,
+  "chain_length": 2,
+  "tampered_entries": [],
+  "missing_signatures": [],
+  "expired_entries": [],
+  "last_verified": "2026-02-04T23:02:14.817437",
+  "anchor_hash": "7fcfe61c56088049b7fc8fa5d17377096fd0de8250fd803542b99a73ee8a08ec"
+}

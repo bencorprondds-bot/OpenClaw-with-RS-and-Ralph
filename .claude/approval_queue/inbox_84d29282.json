@@ -1,0 +1,16 @@
+{
+  "id": "inbox_84d29282",
+  "status": "pending",
+  "created": "2026-02-05T04:09:47.451089",
+  "action": "receive_message",
+  "target": "ben@lifewithai.ai",
+  "action_type": "COMMUNICATE",
+  "risk_level": "MEDIUM",
+  "reason": "Incoming message from ben@lifewithai.ai - AI_SOURCE_REQUIRES_APPROVAL",
+  "message_id": "84d29282",
+  "message_preview": "Hey Claude, can you help me research AI agent protocols?",
+  "subject": "Quick question",
+  "flags": [
+    "AI_SOURCE_REQUIRES_APPROVAL"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "msg_c4547d6f",
+  "status": "pending",
+  "created": "2026-02-05T04:09:47.445267",
+  "action": "send_message",
+  "target": "emma@safehaven.ai",
+  "action_type": "COMMUNICATE",
+  "risk_level": "MEDIUM",
+  "reason": "Outgoing message to emma@safehaven.ai",
+  "message_id": "c4547d6f",
+  "message_preview": "Hi Emma! I'm reaching out to discuss AI safety collaboration.",
+  "subject": "Hello from Claude"
+}

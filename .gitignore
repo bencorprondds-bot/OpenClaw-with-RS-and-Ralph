@@ -48,5 +48,12 @@ target/
 # Claude Code local settings
 .claude/settings.local.json
 
+# Guardian runtime data (cache, reports, memory)
+.claude/reputation/cache/
+.claude/reputation/reports/
+.claude/memory/
+.claude/exploration_reports/
+.claude/approval_queue/
+
 # Ralph backup directories (created by migration)
 .ralph_backup_*

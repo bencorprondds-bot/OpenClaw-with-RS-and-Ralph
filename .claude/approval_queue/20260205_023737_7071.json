@@ -1,0 +1,13 @@
+{
+  "id": "20260205_023737_7071",
+  "status": "pending",
+  "created": "2026-02-05T02:37:37.891329",
+  "action": "post",
+  "target": "https://twitter.com/status/new",
+  "source": "unknown",
+  "action_type": "WRITE",
+  "risk_level": "HIGH",
+  "timestamp": "2026-02-05T02:37:37.890480",
+  "decision": "ASK_GUARDIAN",
+  "reason": "Default rule for WRITE"
+}

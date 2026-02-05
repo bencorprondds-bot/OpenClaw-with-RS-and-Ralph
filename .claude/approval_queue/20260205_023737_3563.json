@@ -1,0 +1,13 @@
+{
+  "id": "20260205_023737_3563",
+  "status": "pending",
+  "created": "2026-02-05T02:37:37.890077",
+  "action": "message",
+  "target": "agent@example.com",
+  "source": "unknown",
+  "action_type": "COMMUNICATE",
+  "risk_level": "MEDIUM",
+  "timestamp": "2026-02-05T02:37:37.889183",
+  "decision": "ASK_GUARDIAN",
+  "reason": "Default rule for COMMUNICATE"
+}

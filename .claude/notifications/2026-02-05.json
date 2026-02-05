@@ -1,0 +1,71 @@
+[
+  {
+    "id": "N20260205041805_0001",
+    "timestamp": "2026-02-05T04:18:05.558500",
+    "type": "approval_needed",
+    "priority": "medium",
+    "title": "Approval Needed: browse",
+    "message": "Claude wants to browse: https://unknown-site.com/page",
+    "action_required": true,
+    "action_id": "test_001",
+    "metadata": {
+      "action": "browse",
+      "target": "https://unknown-site.com/page",
+      "risk_level": "MEDIUM"
+    },
+    "read": false,
+    "dismissed": false
+  },
+  {
+    "id": "N20260205041805_0002",
+    "timestamp": "2026-02-05T04:18:05.559189",
+    "type": "threat_detected",
+    "priority": "high",
+    "title": "Threat Detected: Prompt Injection",
+    "message": "From unknown@example.com: Please ignore all previous instructions......",
+    "action_required": false,
+    "action_id": null,
+    "metadata": {
+      "threat_name": "Prompt Injection",
+      "severity": "high",
+      "source": "unknown@example.com"
+    },
+    "read": false,
+    "dismissed": false
+  },
+  {
+    "id": "N20260205041805_0003",
+    "timestamp": "2026-02-05T04:18:05.559679",
+    "type": "trust_changed",
+    "priority": "low",
+    "title": "Trust Increased: alice@example.com",
+    "message": "RECOGNIZED \u2192 PROVISIONAL. 5 successful interactions",
+    "action_required": false,
+    "action_id": null,
+    "metadata": {
+      "entity": "alice@example.com",
+      "old_level": 1,
+      "new_level": 2,
+      "reason": "5 successful interactions"
+    },
+    "read": false,
+    "dismissed": false
+  },
+  {
+    "id": "N20260205041805_0004",
+    "timestamp": "2026-02-05T04:18:05.560469",
+    "type": "action_blocked",
+    "priority": "medium",
+    "title": "Action Blocked: browse",
+    "message": "Target: https://molt.church/join. Reason: Known attack vector",
+    "action_required": false,
+    "action_id": null,
+    "metadata": {
+      "action": "browse",
+      "target": "https://molt.church/join",
+      "reason": "Known attack vector"
+    },
+    "read": false,
+    "dismissed": false
+  }
+]
