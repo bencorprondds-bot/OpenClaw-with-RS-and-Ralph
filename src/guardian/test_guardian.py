@@ -75,7 +75,7 @@ def main():
 
     while True:
         try:
-            cmd = input("\n🛡️ guardian> ").strip()
+            cmd = input("\nguardian> ").strip()
 
             if not cmd:
                 continue
@@ -162,12 +162,12 @@ def main():
                 if report.red_flags:
                     print(f"\nRed Flags ({len(report.red_flags)}):")
                     for flag in report.red_flags[:3]:
-                        print(f"  ⚠️  [{flag.get('severity', '?')}] {flag.get('detail', 'Unknown')}")
+                        print(f"  [!] [{flag.get('severity', '?')}] {flag.get('detail', 'Unknown')}")
 
                 if report.positive_signals:
                     print(f"\nPositive Signals ({len(report.positive_signals)}):")
                     for signal in report.positive_signals[:3]:
-                        print(f"  ✓  {signal.get('detail', 'Unknown')}")
+                        print(f"  [+] {signal.get('detail', 'Unknown')}")
 
                 print(f"\nRecommendation: {report.recommendation}")
                 print(f"Requires Guardian: {'Yes' if report.requires_guardian else 'No'}")
@@ -182,7 +182,7 @@ def main():
                 value = parts[2]
 
                 entry = memory.store(key, value, MemoryType.WORKING)
-                print(f"\n✓ Stored: {key}")
+                print(f"\n[OK] Stored: {key}")
                 print(f"  Entry ID: {entry.id}")
                 print(f"  Hash: {entry.current_hash[:32]}...")
                 print(f"  Signed: {entry.signature is not None}")
@@ -197,9 +197,9 @@ def main():
                 content, is_valid = memory.retrieve(key)
 
                 if content is None:
-                    print(f"\n✗ Key '{key}' not found in memory")
+                    print(f"\n[X] Key '{key}' not found in memory")
                 else:
-                    validity = "\033[92m✓ Valid\033[0m" if is_valid else "\033[91m✗ TAMPERED!\033[0m"
+                    validity = "\033[92m[OK] Valid\033[0m" if is_valid else "\033[91m[X] TAMPERED!\033[0m"
                     print(f"\n{validity}")
                     print(f"  Content: {content}")
 
@@ -209,9 +209,9 @@ def main():
                 report = memory.verify_integrity()
 
                 if report.is_valid:
-                    print(f"\n\033[92m✓ Memory chain is VALID\033[0m")
+                    print(f"\n\033[92m[OK] Memory chain is VALID\033[0m")
                 else:
-                    print(f"\n\033[91m✗ Memory chain has been TAMPERED WITH!\033[0m")
+                    print(f"\n\033[91m[X] Memory chain has been TAMPERED WITH!\033[0m")
                     print(f"  Tampered entries: {report.tampered_entries}")
 
                 print(f"  Chain length: {report.chain_length}")
