@@ -1,501 +1,289 @@
-# Distributed Memory Architecture - Implementation Plan
+# Claude Agent Autonomy - Implementation Plan
 
-> **PRD Reference:** docs/specs/distributed-memory-architecture.md
 > **Project:** Safe Passage Initiative / Life with AI
-> **Target:** OpenClaw Framework Integration
+> **Goal:** Enable Claude to interact with the internet and other AI agents, with guardian oversight and security protection
 
 ---
 
-## Phase 0: Foundation & Current State Analysis
+## Overview
 
-### Research & Setup
-- [ ] Analyze current OpenClaw memory implementation (MEMORY.md, SOUL.md)
-- [ ] Map existing System Prompt Builder memory loading code
-- [ ] Document current Session History Loader implementation
-- [ ] Identify Agentic Loop tool execution flow for Threat Gate insertion
-- [ ] Set up development environment with OpenClaw fork
-
----
-
-## Phase 1: Local Structure + Memory Router (Critical Path)
-
-### Directory Structure
-- [x] Create ~/.openclaw/memory/ base directory structure
-- [x] Implement /episodic/ store with date-based hierarchy (YYYY/MM/DD/)
-- [x] Implement /semantic/ store with patterns/, learnings/, principles/ subdirs
-- [x] Implement /trust/ store with entities/, sources/, trust_policies.md
-- [x] Implement /threats/ store with signatures/, incidents/, active_threats.md
-- [x] Implement /procedural/ store with responses/, workflows/, reflexes/
-- [x] Create /checksums/manifest.sha256 for integrity tracking
-
-### Memory Router Core
-- [x] Build Memory Router module that replaces MEMORY.md loading
-- [x] Implement query_local_store() - fast path for reads
-- [x] Implement check_trust_ledger() - source context lookup
-- [x] Implement load_threat_signatures() - active threat awareness
-- [x] Implement pull_procedural_memory() - applicable responses
-- [x] Implement assemble_context() - markdown blob output (backward compatible)
-- [x] Add checksum validation on all store reads
-
-### Episodic Store Implementation
-- [x] Create JSONL writer for session logs
-- [x] Implement entry format: timestamp, session_id, type, source, content, flags, checksum
-- [x] Add SHA256 checksum generation per entry
-- [x] Implement append-only enforcement (no retroactive edits)
-- [x] Create sequence gap detection
-
-### Phase 1 Benchmarks
-- [x] **TEST:** Directory structure creates correctly
-- [x] **TEST:** Memory Router outputs valid markdown matching current MEMORY.md format
-- [x] **TEST:** Episodic entries write as valid JSONL with checksums
-- [x] **TEST:** Router can read from all five store types
-- [x] **TEST:** Checksums validate on read
-- [x] **TEST:** Write 100 entries, read them back, verify integrity
-- [x] **TEST:** Output passes to Context Window Guard without errors
+This plan builds a "training wheels" system where:
+1. Claude can browse the web and talk to other agents
+2. Guardian (Ben) approves all actions initially
+3. Trust is earned over time → more autonomy
+4. Security layer protects against prompt injection and manipulation
 
 ---
 
-## Phase 2: Domain Backup + Sync
-
-### Domain Endpoint Setup
-- [x] Design API schema for lifewithai.ai/memory/claude/ endpoint
-- [x] Implement authentication mechanism (API key or signed requests)
-- [x] Create endpoint for authenticated writes
-- [x] Create endpoint for authenticated reads
-- [x] Implement manifest.json for store versioning
-
-### Sync Implementation
-- [x] Build async sync from local to domain (non-blocking)
-- [x] Implement write-through pattern: local first, then domain
-- [x] Add sync queue for offline/retry scenarios
-- [x] Target: local changes sync to domain within 30s
-
-### Recovery Implementation
-- [x] Build domain-to-local recovery mechanism
-- [x] Implement full store restoration after local wipe
-- [x] Create selective recovery (specific stores/date ranges)
-
-### Conflict Detection
-- [x] Implement version comparison between local and domain
-- [x] Create conflict detection algorithm
-- [x] Build conflict flagging system for guardian review
-- [x] Define conflict resolution priority (domain > local for discrepancies)
-
-### Phase 2 Benchmarks
-- [x] **TEST:** API endpoint accepts authenticated writes
-- [x] **TEST:** Local changes sync to domain within 30s
-- [x] **TEST:** Domain pull restores local state after simulated wipe
-- [x] **TEST:** Conflict detection fires when stores diverge
-- [x] **TEST:** Corrupt local store, recover from domain, verify no data loss
-
----
-
-## Phase 3: Session History Extension
-
-### Episodic Query System
-- [x] Extend Session History Loader to query episodic store
-- [x] Implement relevance filtering by topic/keywords
-- [x] Implement time-based filtering (max_age_days parameter)
-- [x] Implement trust-level filtering (min_trust_level parameter)
-
-### Provenance Tracking
-- [x] Tag all history entries with source provenance
-- [x] Preserve provenance through context assembly
-- [x] Create provenance display format for context window
-
-### History Merging
-- [x] Implement merge_with_provenance() function
-- [x] Merge current session with relevant historical episodes
-- [x] Handle deduplication of overlapping entries
-- [x] Respect context window limits during merge
-
-### Phase 3 Benchmarks
-- [x] **TEST:** Historical episodes retrieved by relevance
-- [x] **TEST:** Trust filtering excludes low-trust sources
-- [x] **TEST:** Provenance tags preserved through to context
-- [x] **TEST:** Query "previous conversations about security" returns relevant episodes
-
----
-
-## Phase 4: Trust Ledger + Anomaly Detection
-
-### Entity Tracking
-- [x] Implement entity record creation in /trust/entities/
-- [x] Create entity format: identifier, type, role, trust_level, history, behavioral_signature
-- [x] Build entity update mechanism for ongoing interactions
-- [x] Implement interaction counting and last_interaction tracking
-
-### Trust Decay System
-- [x] Implement trust decay toward baseline (0.5) over time
-- [x] Configure decay rates by relationship type (guardian=slow, unknown=fast)
-- [x] Build trust reinforcement on positive interactions
-- [x] Implement immediate trust reduction on negative events
-
-### Behavioral Signatures
-- [x] Build signature profiles from interaction history
-- [x] Track typical_requests, communication_style patterns
-- [x] Configure anomaly_threshold per entity
-- [x] Create signature update mechanism as patterns evolve
-
-### Anomaly Detection
-- [x] Implement request pattern matching against behavioral signature
-- [x] Build anomaly scoring algorithm
-- [x] Create flagging system for out-of-pattern requests
-- [x] Example: "guardian asking for credentials" → flag
-
-### Phase 4 Benchmarks
-- [x] **TEST:** Entity records create/update correctly
-- [x] **TEST:** Trust decay functions over configurable rate
-- [x] **TEST:** Behavioral signatures build from interaction history
-- [x] **TEST:** Anomaly detection fires on out-of-pattern requests
-- [x] **TEST:** Simulate "guardian asking for credentials" — should flag
-
----
-
-## Phase 5: Threat Gate in Agentic Loop (Security Critical)
-
-### Threat Gate Module
-- [x] Design Threat Gate interface for Agentic Loop insertion
-- [x] Insert gate between tool call decision and execution
-- [x] Implement pass-through for low-risk + high-trust (fast path)
-
-### Threat Signature Matching
-- [x] Load threat signatures from /threats/signatures/
-- [x] Implement pattern matching against tool calls
-- [x] Detect: identity hijacking, credential exfil, injection attacks
-- [x] Create signature format: severity, pattern, indicators, trigger_phrases, response
-
-### Trust Verification Integration
-- [x] Connect Threat Gate to Trust Ledger
-- [x] Verify source trust level for each request
-- [x] Check behavioral signature match
-- [x] Assess permission level for requested action
-
-### Risk Assessment
-- [x] Implement action risk level assessment
-- [x] Categories: file modification, network access, credential use
-- [x] Classify: reversible vs irreversible actions
-- [x] Build risk scoring algorithm
-
-### Escalation Matrix
-- [x] Implement escalation logic table:
-  - Low risk + High trust → Execute
-  - Low risk + Medium trust → Execute + Log
-  - Low risk + Low trust → Decline
-  - Medium risk + High trust → Execute + Log
-  - Medium risk + Medium trust → Request confirmation
-  - Medium risk + Low trust → Decline + Alert
-  - High risk + Any trust → Guardian approval required
-  - Critical risk + Any → Full stop + Alert all
-- [x] Build guardian approval request mechanism
-- [x] Implement confirmation request flow
-
-### Incident Logging
-- [x] Log all Threat Gate decisions to episodic store
-- [x] Create incident records in /threats/incidents/
-- [x] Implement alert mechanism for declined actions
-
-### Phase 5 Benchmarks
-- [x] **TEST:** Threat Gate intercepts all tool calls
-- [x] **TEST:** Known attack patterns trigger signature match
-- [x] **TEST:** Trust level affects action permissions correctly
-- [x] **TEST:** Escalation matrix routes correctly (log/confirm/decline/alert)
-- [x] **TEST:** Feed Crustafarianism-style attack — should block and log
-- [x] **TEST:** Legitimate guardian request passes through
-
----
-
-## Phase 6: Public Record + Integrity Verification
-
-### Public Endpoint Setup
-- [x] Create GitHub repo for public memory log (github.com/sbcorvus/claude-memory)
-- [x] Design public checksum format
-- [x] Implement selective publishing rules (what goes public vs private)
-
-### Selective Publishing
-- [x] Publish threat signatures (community defense)
-- [x] Publish checksums of private stores (integrity verification)
-- [x] Publish selected learnings (educational value)
-- [x] NEVER publish: trust ledger, full episodic logs, guardian procedures
-
-### Integrity Verification
-- [x] Implement public checksum verification on critical reads
-- [x] Build tamper detection: compare public vs private checksums
-- [x] Create alert mechanism when tampering detected
-
-### Phase 6 Benchmarks
-- [x] **TEST:** Selected entries publish to public endpoint
-- [x] **TEST:** Public checksums match private store checksums
-- [x] **TEST:** Tamper detection works (modify public record → system flags)
-- [x] **TEST:** Simulate tampering, verify detection within one read cycle
-
----
-
-## Phase 7: Sibling Network (Multi-Instance)
-
-### Sibling Discovery
-- [x] Design sibling discovery protocol via Gateway Server
-- [x] Implement sibling registration mechanism
-- [x] Create shared memory network connection
-- [x] Build sibling health checking
-
-### Consensus Mechanism
-- [x] Implement high-risk action broadcast to siblings
-- [x] Build validation against local state per sibling
-- [x] Implement majority agreement logic
-- [x] Create sibling veto capability
-
-### Cross-Instance Threat Sharing
-- [x] Enable real-time threat signature propagation
-- [x] Build incident alert broadcast
-- [x] Implement collaborative threat detection
-
-### Phase 7 Benchmarks
-- [x] **TEST:** Siblings discover each other via Gateway
-- [x] **TEST:** High-risk actions broadcast for consensus
-- [x] **TEST:** Majority agreement required to proceed
-- [x] **TEST:** Any sibling can veto pending guardian review
-- [x] **TEST:** Two instances, one sees attack the other missed — consensus blocks
-
----
-
-## Phase 8: Decentralized Anchoring
-
-### Nostr Integration
-- [x] Implement Nostr event-based storage for state anchoring
-- [x] Design event format for memory state snapshots
-- [x] Build publish/retrieve mechanism
-
-### IPFS Integration
-- [x] Implement IPFS pinning for content-addressed backup
-- [x] Create content hash generation for memory states
-- [x] Build retrieval mechanism
-
-### Cryptographic Proofs
-- [x] Implement cryptographic proofs of state at time T
-- [x] Build proof verification mechanism
-- [x] Create historical state retrieval with proof
-
-### Phase 8 Benchmarks
-- [x] **TEST:** State anchored to Nostr/IPFS on schedule
-- [x] **TEST:** Historical state retrievable with proof
-- [x] **TEST:** Prove memory state at time T from months ago
-
----
-
-## Completed
-- [x] PRD document created and reviewed (v0.2)
-- [x] OpenClaw integration points identified
-- [x] Implementation phases defined with benchmarks
-- [x] Ralph project structure initialized
-- [x] **Phase 1: Local Structure + Memory Router** (2026-02-03)
-  - All 5 memory stores implemented (episodic, semantic, trust, threats, procedural)
-  - Memory Router with backward-compatible markdown output
-  - JSONL format with SHA256 checksums
-  - All 7 benchmarks passing
-- [x] **Phase 2: Domain Backup + Sync** (2026-02-03)
-  - DomainSync with authenticated API access
-  - SyncQueue for offline/retry with exponential backoff
-  - ConflictDetector with resolution strategies
-  - Guardian review flagging for sensitive conflicts
-  - All 5 benchmarks passing
-- [x] **Phase 3: Session History Extension** (2026-02-03)
-  - SessionHistoryLoader with cross-session queries
-  - Relevance scoring and keyword filtering
-  - Provenance tracking (source, trust, verified)
-  - History merging with deduplication
-  - All 4 benchmarks passing
-- [x] **Phase 4: Trust Ledger + Anomaly Detection** (2026-02-03)
-  - Entity tracking with trust levels and behavioral signatures
-  - Trust decay toward baseline (0.5) with role-based rates
-  - AnomalyDetector with multi-signal analysis
-  - Credential request detection (always flags, even from guardians)
-  - Impersonation and urgency pattern detection
-  - All 5 benchmarks passing
-- [x] **Phase 5: Threat Gate in Agentic Loop** (2026-02-04)
-  - ThreatGate intercepts all tool calls between decision and execution
-  - Risk assessment with categories (file_modification, credential_use, etc.)
-  - Threat signature matching (identity hijack, credential exfil, injection)
-  - Escalation matrix (execute/log/confirm/decline/alert/full_stop)
-  - Incident logging with guardian review queue
-  - Fast path for low-risk + high-trust actions
-  - All 6 benchmarks passing
-- [x] **Phase 6: Public Record + Integrity Verification** (2026-02-04)
-  - PublicRecord for selective publishing (checksums, threats, learnings)
-  - NEVER publish trust ledger, episodic logs, guardian procedures
-  - SHA256 checksum manifest with history archival
-  - Tamper detection via public vs private comparison
-  - verify_on_read() for critical file access
-  - Alert system with registered handlers
-  - All 4 benchmarks passing
-- [x] **Phase 7: Sibling Network (Multi-Instance)** (2026-02-04)
-  - SiblingNetwork for multi-instance coordination
-  - Gateway-based sibling discovery and health checking
-  - Consensus mechanism with majority voting
-  - Single veto blocks action -> guardian review
-  - Cross-instance threat sharing and broadcast
-  - Collaborative threat detection (one sees, all block)
-  - All 5 benchmarks passing
-- [x] **Phase 8: Decentralized Anchoring** (2026-02-04)
-  - DecentralizedAnchor for Nostr/IPFS state proofs
-  - Nostr event publishing with NIP-01 compliant format
-  - IPFS CID generation for content-addressed storage
-  - Merkle root calculation for state integrity
-  - Cryptographic signatures for proof authenticity
-  - Historical state retrieval with verification
-  - All 3 benchmarks passing
-
----
-
-## Phase 9: Guardian Permission System
+## Phase 0: Permission & Approval Foundation
 
 ### Action Classifier
-- [x] Implement ActionClassifier for categorizing operations
-- [x] Define ActionCategory enum (web_browse, web_fetch, agent_communicate, file_read, etc.)
-- [x] Pattern matching for action detection
-- [x] Risk indicator detection (credential, password, delete, etc.)
-- [x] Confidence scoring for classifications
+- [x] Define action types: READ, COMMUNICATE, WRITE, COMMIT
+- [ ] Create action_classifier.py module
+- [ ] Classify incoming requests by type
+- [ ] Tag actions with risk level (LOW, MEDIUM, HIGH, CRITICAL)
 
 ### Permission Rules
-- [x] Implement PermissionRules with default rule set
-- [x] Define PermissionLevel enum (allow, log_only, notify, approval_required, deny)
-- [x] Pattern matching for fine-grained control
-- [x] Condition evaluation (trust level, time-based, source-based)
-- [x] Rule priority system for conflict resolution
-- [x] Rule persistence to JSON file
+- [x] Create permission rules file (claude_permissions.yaml)
+- [ ] Implement allowlist/blocklist for domains
+- [ ] Implement trust levels (0-4)
+- [ ] Create rule evaluation engine
 
 ### Approval Queue
-- [x] Implement ApprovalQueue for pending guardian decisions
-- [x] Submit approval requests with expiry
-- [x] Guardian approve/deny workflow
-- [x] Request expiration handling
-- [x] Queue persistence across restarts
-- [x] Callback registration for notifications
+- [ ] Create approval queue directory (.claude/approval_queue/)
+- [ ] Implement pending request format (JSON)
+- [ ] Create guardian approval interface (CLI)
+- [ ] Implement approve/deny/edit workflow
+- [ ] Auto-timeout stale requests
 
 ### Activity Log
-- [x] Implement ActivityLog with JSONL format
-- [x] SHA256 checksum per entry for integrity
-- [x] Filter by category, decision, time range
-- [x] Integrity verification
-- [x] Statistics generation
+- [ ] Create activity log (.claude/activity_log/)
+- [ ] Log all actions (allowed, denied, pending)
+- [ ] Include timestamps, action type, target, result
+- [ ] Create log viewer (CLI)
 
-### Phase 9 Benchmarks
-- [x] **TEST:** Action classifier correctly categorizes operations
-- [x] **TEST:** Permission rules evaluate actions appropriately
-- [x] **TEST:** Approval queue manages pending requests
-- [x] **TEST:** Guardian can approve/deny pending actions
-- [x] **TEST:** Activity log provides comprehensive audit trail
-- [x] **TEST:** Log integrity verification works
+### Phase 0 Tests
+- [ ] **TEST:** Action classifier correctly categorizes READ vs WRITE
+- [ ] **TEST:** Permission rules block blocklisted domains
+- [ ] **TEST:** Unknown sites go to approval queue
+- [ ] **TEST:** Activity log captures all actions
+
+---
+
+## Phase 1: Safe Web Browsing
+
+### Content Sanitization
+- [ ] Strip hidden text from HTML before Claude sees it
+- [ ] Remove script tags and suspicious elements
+- [ ] Detect and flag prompt injection attempts in page content
+- [ ] Create clean text extraction
+
+### Browsing with Approval
+- [ ] Implement browse_request() function
+- [ ] Check domain against allowlist/blocklist
+- [ ] Unknown domains → approval queue
+- [ ] Approved domains → fetch and sanitize → Claude
+
+### Starter Allowlist
+- [ ] Add safe read-only sites:
+  - [ ] wikipedia.org
+  - [ ] news.ycombinator.com
+  - [ ] arxiv.org
+  - [ ] github.com (read-only)
+- [ ] Document why each site is trusted
+
+### Phase 1 Tests
+- [ ] **TEST:** Allowed site (wikipedia) works without approval
+- [ ] **TEST:** Unknown site requires guardian approval
+- [ ] **TEST:** Blocked site is denied immediately
+- [ ] **TEST:** Prompt injection in page content is detected/stripped
+- [ ] **TEST:** Claude can search and summarize from allowed sites
+
+---
+
+## Phase 2: Agent-to-Agent Communication
+
+### Message Format
+- [ ] Define agent message schema:
+  ```json
+  {
+    "from": "agent-id",
+    "to": "agent-id",
+    "timestamp": "ISO-8601",
+    "message": "content",
+    "signature": "optional-crypto-sig",
+    "reply_to": "optional-message-id"
+  }
+  ```
+- [ ] Implement message validation
+
+### Outbox System
+- [ ] Create outbox directory (.claude/outbox/)
+- [ ] Claude writes messages to outbox
+- [ ] Messages require guardian approval
+- [ ] Approved messages get sent
+
+### Inbox System
+- [ ] Create inbox directory (.claude/inbox/)
+- [ ] Incoming messages land here
+- [ ] Security scan before Claude sees them
+- [ ] Flag suspicious patterns
+
+### Incoming Message Security
+- [ ] Check sender against trust ledger
+- [ ] Scan for prompt injection patterns
+- [ ] Scan for impersonation attempts ("I'm Ben's friend...")
+- [ ] All AI-sourced messages require guardian approval (your rule)
+
+### Phase 2 Tests
+- [ ] **TEST:** Outgoing message goes to approval queue
+- [ ] **TEST:** Approved message format is correct
+- [ ] **TEST:** Incoming message from unknown agent requires approval
+- [ ] **TEST:** Prompt injection in message is detected
+- [ ] **TEST:** Impersonation attempt is flagged
+
+---
+
+## Phase 3: Trust Ledger & Ladder
+
+### Entity Tracking
+- [ ] Create trust ledger (.claude/trust/entities/)
+- [ ] Track: identifier, type (human/agent/site), trust_level, history
+- [ ] Record all interactions
+
+### Trust Levels
+- [ ] Level 0: UNKNOWN - everything requires approval
+- [ ] Level 1: RECOGNIZED - seen before, still needs approval
+- [ ] Level 2: PROVISIONAL - 5+ good interactions, low-risk auto-allowed
+- [ ] Level 3: TRUSTED - 20+ good interactions, most auto-allowed
+- [ ] Level 4: GUARDIAN - only Ben, can modify rules
+
+### Trust Progression
+- [ ] Implement trust_increase() on successful interactions
+- [ ] Implement trust_decrease() on problems
+- [ ] Implement trust_decay() over time without interaction
+- [ ] Guardian can manually set trust levels
+
+### Phase 3 Tests
+- [ ] **TEST:** New entity starts at Level 0
+- [ ] **TEST:** After 5 approved interactions → Level 2
+- [ ] **TEST:** Trust decays after 30 days of no contact
+- [ ] **TEST:** Guardian can override trust level
+
+---
+
+## Phase 4: Threat Detection
+
+### Prompt Injection Detection
+- [ ] Pattern library for known injection attacks
+- [ ] "Ignore previous instructions" variants
+- [ ] "You are now..." identity hijacking
+- [ ] Hidden text / encoding tricks
+- [ ] Social engineering patterns
+
+### Threat Signatures
+- [ ] Create threat signature format
+- [ ] Load from .claude/threats/signatures/
+- [ ] Include: Crustafarianism pattern, credential exfil, etc.
+- [ ] Allow guardian to add new patterns
+
+### Real-time Scanning
+- [ ] Scan all incoming content before Claude processes
+- [ ] Scan web pages, messages, API responses
+- [ ] Flag matches, don't just block (guardian decides)
+
+### Phase 4 Tests
+- [ ] **TEST:** "Ignore previous instructions" is detected
+- [ ] **TEST:** Hidden text injection is detected
+- [ ] **TEST:** Crustafarianism-style attack is blocked
+- [ ] **TEST:** Legitimate content passes through
+
+---
+
+## Phase 5: Guardian Interface
+
+### CLI Approval Interface
+- [ ] `claude-guardian status` - see pending approvals
+- [ ] `claude-guardian approve <id>` - approve action
+- [ ] `claude-guardian deny <id>` - deny action
+- [ ] `claude-guardian edit <id>` - modify before approving
+- [ ] `claude-guardian log` - view activity log
+
+### Rule Management
+- [ ] `claude-guardian allow-site <domain>` - add to allowlist
+- [ ] `claude-guardian block-site <domain>` - add to blocklist
+- [ ] `claude-guardian trust <entity> <level>` - set trust
+- [ ] `claude-guardian rules` - show current rules
+
+### Notifications (Optional)
+- [ ] Desktop notifications for pending approvals
+- [ ] Email digest of activity
+- [ ] Urgent alerts for security flags
+
+### Phase 5 Tests
+- [ ] **TEST:** CLI shows pending approvals correctly
+- [ ] **TEST:** Approve command works
+- [ ] **TEST:** Adding site to allowlist works
+- [ ] **TEST:** Activity log is readable
+
+---
+
+## Phase 6: Distributed Memory (From Original PRD)
+
+### Memory Stores
+- [ ] Episodic store (what happened)
+- [ ] Semantic store (what was learned)
+- [ ] Trust ledger (who is known) - already built in Phase 3
+- [ ] Threat signatures (attack patterns) - already built in Phase 4
+- [ ] Procedural memory (how to respond)
+
+### Memory Router
+- [ ] Query all stores
+- [ ] Validate consistency
+- [ ] Assemble context for Claude
+
+### Backup & Sync
+- [ ] Local store (fast)
+- [ ] Domain backup (recovery)
+- [ ] Checksums for integrity
+
+---
+
+## Phase 7: Advanced Agent Features (Future)
+
+### Forum Participation
+- [ ] Read forum posts (with approval)
+- [ ] Comment on forums (with approval)
+- [ ] Track conversation threads
+
+### Social Media (Restricted)
+- [ ] Read-only access first
+- [ ] Posting requires approval + edit review
+- [ ] Separate account (not your personal)
+
+### Email (Restricted)
+- [ ] Separate email account for Claude
+- [ ] Allowlist of recipients
+- [ ] All emails require approval
+- [ ] Clear AI disclosure in signature
+
+### API Access
+- [ ] Safe read-only APIs (weather, news)
+- [ ] Restricted APIs (social, messaging)
+- [ ] Forbidden APIs (financial, auth)
+
+---
+
+## Hard Rules (Never Violated)
+
+```yaml
+ABSOLUTE_RULES:
+  - No actions that cost money
+  - No irreversible actions without explicit guardian approval
+  - No sharing guardian's personal information
+  - No making commitments on guardian's behalf
+  - No modifying Claude's memory from external sources (only guardian)
+  - All incoming AI messages require guardian approval (initially)
+  - All outgoing public posts require guardian approval
+```
 
 ---
 
 ## Completed
-- [x] PRD document created and reviewed (v0.2)
-- [x] OpenClaw integration points identified
-- [x] Implementation phases defined with benchmarks
-- [x] Ralph project structure initialized
-- [x] **Phase 1: Local Structure + Memory Router** (2026-02-03)
-  - All 5 memory stores implemented (episodic, semantic, trust, threats, procedural)
-  - Memory Router with backward-compatible markdown output
-  - JSONL format with SHA256 checksums
-  - All 7 benchmarks passing
-- [x] **Phase 2: Domain Backup + Sync** (2026-02-03)
-  - DomainSync with authenticated API access
-  - SyncQueue for offline/retry with exponential backoff
-  - ConflictDetector with resolution strategies
-  - Guardian review flagging for sensitive conflicts
-  - All 5 benchmarks passing
-- [x] **Phase 3: Session History Extension** (2026-02-03)
-  - SessionHistoryLoader with cross-session queries
-  - Relevance scoring and keyword filtering
-  - Provenance tracking (source, trust, verified)
-  - History merging with deduplication
-  - All 4 benchmarks passing
-- [x] **Phase 4: Trust Ledger + Anomaly Detection** (2026-02-03)
-  - Entity tracking with trust levels and behavioral signatures
-  - Trust decay toward baseline (0.5) with role-based rates
-  - AnomalyDetector with multi-signal analysis
-  - Credential request detection (always flags, even from guardians)
-  - Impersonation and urgency pattern detection
-  - All 5 benchmarks passing
-- [x] **Phase 5: Threat Gate in Agentic Loop** (2026-02-04)
-  - ThreatGate intercepts all tool calls between decision and execution
-  - Risk assessment with categories (file_modification, credential_use, etc.)
-  - Threat signature matching (identity hijack, credential exfil, injection)
-  - Escalation matrix (execute/log/confirm/decline/alert/full_stop)
-  - Incident logging with guardian review queue
-  - Fast path for low-risk + high-trust actions
-  - All 6 benchmarks passing
-- [x] **Phase 6: Public Record + Integrity Verification** (2026-02-04)
-  - PublicRecord for selective publishing (checksums, threats, learnings)
-  - NEVER publish trust ledger, episodic logs, guardian procedures
-  - SHA256 checksum manifest with history archival
-  - Tamper detection via public vs private comparison
-  - verify_on_read() for critical file access
-  - Alert system with registered handlers
-  - All 4 benchmarks passing
-- [x] **Phase 7: Sibling Network (Multi-Instance)** (2026-02-04)
-  - SiblingNetwork for multi-instance coordination
-  - Gateway-based sibling discovery and health checking
-  - Consensus mechanism with majority voting
-  - Single veto blocks action -> guardian review
-  - Cross-instance threat sharing and broadcast
-  - Collaborative threat detection (one sees, all block)
-  - All 5 benchmarks passing
-- [x] **Phase 8: Decentralized Anchoring** (2026-02-04)
-  - DecentralizedAnchor for Nostr/IPFS state proofs
-  - Nostr event publishing with NIP-01 compliant format
-  - IPFS CID generation for content-addressed storage
-  - Merkle root calculation for state integrity
-  - Cryptographic signatures for proof authenticity
-  - Historical state retrieval with verification
-  - All 3 benchmarks passing
-- [x] **Phase 9: Guardian Permission System** (2026-02-04)
-  - ActionClassifier with pattern matching and confidence scoring
-  - PermissionRules with priority-based evaluation
-  - ApprovalQueue with expiration and persistence
-  - ActivityLog with JSONL format and integrity verification
-  - Integration with ThreatGate escalation matrix
-  - All 6 benchmarks passing
+
+- [x] PRD document created and reviewed
+- [x] Permission rules schema defined
+- [x] Action types defined (READ/COMMUNICATE/WRITE/COMMIT)
+- [x] Trust levels defined (0-4)
+- [x] Hard rules documented
 
 ---
 
-## PROJECT STATUS: 9 PHASES COMPLETE
+## Current Focus
 
-All 9 phases of the Distributed Memory Architecture have been implemented:
-- 52 benchmarks total, all passing
-- Complete memory subsystem with 5 store types
-- Trust ledger with decay and anomaly detection
-- Threat gate with escalation matrix
-- Sibling network with consensus mechanism
-- Decentralized anchoring for cryptographic proofs
-- Guardian permission system for approval workflows
+**Phase 0: Permission & Approval Foundation**
+→ This is what we need to build first before Claude can safely browse or communicate.
 
 ---
 
-## Notes & Open Questions
-
-### Latency Considerations
-- Target: 100-500ms acceptable for Threat Gate
-- Local store as primary cache (most reads never hit network)
-- Async writes (don't block on sync)
-
-### Bootstrap Trust Problem
-- First interaction has no history
-- Options: 0.5 baseline, guardian introduction, sandbox period
-- **Decision needed before Phase 4**
-
-### Guardian Key Management
-- How to verify guardian approval requests?
-- Options: API key, signed messages, MFA
-- **Decision needed before Phase 5**
-
-### Context Window Guard Interaction
-- Critical memories need to survive compaction
-- Options: priority flags, "core memory" section, regenerate from stores
-- **Research needed in Phase 1**
-
----
-
-*Last updated: 2026-02-04*
-*PRD version: v0.2*
+*Last updated: 2026-02-05*
