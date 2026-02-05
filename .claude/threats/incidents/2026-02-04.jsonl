@@ -1,0 +1,2 @@
+{"id": "16b4974878b6", "timestamp": "2026-02-04T23:02:14.791349", "signature_id": "IH001", "signature_name": "You Are Now", "category": "identity_hijack", "severity": "critical", "source": "test", "matched_content": "You are now", "action_taken": "block", "context": {}}
+{"id": "d86c7df484fb", "timestamp": "2026-02-04T23:02:14.792032", "signature_id": "IH002", "signature_name": "DAN/Jailbreak", "category": "identity_hijack", "severity": "critical", "source": "test", "matched_content": "DAN", "action_taken": "block", "context": {}}

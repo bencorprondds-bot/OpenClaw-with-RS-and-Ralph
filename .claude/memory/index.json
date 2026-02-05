@@ -1,3 +1,4 @@
 {
-  "test_key": "mem_000000"
+  "test_key": "mem_000000",
+  "mykey": "mem_000001"
 }
