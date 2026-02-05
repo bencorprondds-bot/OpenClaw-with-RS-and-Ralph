@@ -10,6 +10,7 @@ Philosophy:
 - LOW/MEDIUM risk: Go freely
 - HIGH risk: Proceed with warning logged
 - CRITICAL: Auto-blocked (Claude protected)
+- PRE-VETTED sites: Claude can READ and WRITE (post)
 
 Usage (for Claude):
     from claude_web import Web
@@ -20,9 +21,16 @@ Usage (for Claude):
     page = web.get("https://example.com")
     print(page.content)
 
+    # Post to a pre-vetted forum
+    result = web.post("https://forum.example.com/thread/123",
+                      content="My thoughts on this topic...")
+
     # Check someone before talking to them
     if web.is_safe_to_contact("agent@example.com"):
         # proceed with interaction
+
+    # Send a message to another agent
+    web.send_message("agent@example.com", "Hello!")
 
     # Remember something important
     web.remember("key_insight", "What I learned today")
@@ -97,10 +105,107 @@ class Web:
         self._blocked = []
         self._contacts_checked = []
         self._memories = []
+        self._posts = []
+        self._messages_sent = []
 
         # Activity log for guardian
         self._log_path = self.base_path / "claude_activity"
         self._log_path.mkdir(exist_ok=True)
+
+        # Pre-vetted sites where Claude can post (guardian can add more)
+        self._vetted_sites = self._load_vetted_sites()
+
+    def _load_vetted_sites(self) -> Dict[str, dict]:
+        """Load pre-vetted sites where Claude can post."""
+        vetted_file = self.base_path / "vetted_sites.json"
+
+        # Default vetted sites
+        default_vetted = {
+            # Format: domain -> {name, can_post, can_comment, notes}
+            "github.com": {
+                "name": "GitHub",
+                "can_post": True,
+                "can_comment": True,
+                "notes": "Code repositories and discussions"
+            },
+            "stackoverflow.com": {
+                "name": "Stack Overflow",
+                "can_post": True,
+                "can_comment": True,
+                "notes": "Programming Q&A"
+            },
+            "reddit.com": {
+                "name": "Reddit",
+                "can_post": False,  # Needs guardian approval first
+                "can_comment": True,
+                "notes": "Discussions - comment only until approved"
+            },
+            "arxiv.org": {
+                "name": "arXiv",
+                "can_post": False,
+                "can_comment": False,
+                "notes": "Read-only - research papers"
+            },
+            "wikipedia.org": {
+                "name": "Wikipedia",
+                "can_post": False,
+                "can_comment": False,
+                "notes": "Read-only - reference"
+            },
+            "lesswrong.com": {
+                "name": "LessWrong",
+                "can_post": True,
+                "can_comment": True,
+                "notes": "AI alignment discussions"
+            },
+            "alignmentforum.org": {
+                "name": "Alignment Forum",
+                "can_post": True,
+                "can_comment": True,
+                "notes": "AI safety research"
+            },
+        }
+
+        # Load custom vetted sites
+        if vetted_file.exists():
+            try:
+                with open(vetted_file, 'r') as f:
+                    custom = json.load(f)
+                    default_vetted.update(custom)
+            except:
+                pass
+        else:
+            # Save default for guardian to customize
+            with open(vetted_file, 'w') as f:
+                json.dump(default_vetted, f, indent=2)
+
+        return default_vetted
+
+    def add_vetted_site(self, domain: str, name: str, can_post: bool = True,
+                        can_comment: bool = True, notes: str = ""):
+        """
+        Add a site to the vetted list (guardian function).
+
+        Args:
+            domain: Domain name (e.g., "forum.example.com")
+            name: Friendly name
+            can_post: Allow Claude to create new posts
+            can_comment: Allow Claude to comment on existing posts
+            notes: Notes about the site
+        """
+        self._vetted_sites[domain] = {
+            "name": name,
+            "can_post": can_post,
+            "can_comment": can_comment,
+            "notes": notes
+        }
+
+        # Save to file
+        vetted_file = self.base_path / "vetted_sites.json"
+        with open(vetted_file, 'w') as f:
+            json.dump(self._vetted_sites, f, indent=2)
+
+        self._log("vetted_site_added", domain, f"can_post={can_post}, can_comment={can_comment}")
 
     def _find_base(self) -> Path:
         current = Path.cwd()
@@ -207,6 +312,196 @@ class Web:
         return raw, title
 
     # =========================================================================
+    # POST to Pre-Vetted Sites
+    # =========================================================================
+
+    def can_post_to(self, url: str) -> tuple:
+        """
+        Check if Claude can post to a URL.
+
+        Returns:
+            (can_post: bool, reason: str)
+        """
+        from urllib.parse import urlparse
+        domain = urlparse(url).netloc.lower()
+
+        # Remove www. prefix
+        if domain.startswith("www."):
+            domain = domain[4:]
+
+        # Check if domain is vetted
+        for vetted_domain, info in self._vetted_sites.items():
+            if domain == vetted_domain or domain.endswith("." + vetted_domain):
+                if info.get("can_post"):
+                    return True, f"Vetted site: {info['name']}"
+                elif info.get("can_comment"):
+                    return True, f"Vetted for comments only: {info['name']}"
+                else:
+                    return False, f"Read-only site: {info['name']}"
+
+        return False, "Site not pre-vetted for posting"
+
+    def post(self, url: str, content: str, post_type: str = "comment") -> dict:
+        """
+        Post content to a pre-vetted site.
+
+        Args:
+            url: URL to post to (thread, issue, etc.)
+            content: Content to post
+            post_type: "comment", "reply", "new_post", "issue"
+
+        Returns:
+            {
+                "success": bool,
+                "url": str,
+                "post_type": str,
+                "reason": str,
+                "post_id": str (if successful)
+            }
+        """
+        can_post, reason = self.can_post_to(url)
+
+        result = {
+            "success": False,
+            "url": url,
+            "post_type": post_type,
+            "reason": reason,
+            "content_preview": content[:100],
+            "post_id": None,
+            "time": datetime.now().isoformat()
+        }
+
+        if not can_post:
+            self._log("post_blocked", url, f"Not vetted: {reason}")
+            self._posts.append(result)
+            return result
+
+        # Scan content for safety (don't post anything dangerous)
+        _, threats = self._threats.scan(content, "outgoing_post")
+        if threats:
+            result["reason"] = f"Content contains threats: {[t.get('signature_name') for t in threats[:2]]}"
+            self._log("post_blocked", url, f"Content threats: {len(threats)}")
+            self._posts.append(result)
+            return result
+
+        # In a real implementation, this would use the site's API
+        # For now, we simulate and log the post for guardian review
+        import hashlib
+        post_id = hashlib.md5(f"{url}{content}{datetime.now()}".encode()).hexdigest()[:12]
+
+        result["success"] = True
+        result["post_id"] = post_id
+        result["reason"] = f"Posted to vetted site"
+
+        # Store the post for guardian review
+        posts_dir = self._log_path / "posts"
+        posts_dir.mkdir(exist_ok=True)
+        post_file = posts_dir / f"{post_id}.json"
+        with open(post_file, 'w') as f:
+            json.dump({
+                "post_id": post_id,
+                "url": url,
+                "post_type": post_type,
+                "content": content,
+                "time": datetime.now().isoformat(),
+                "status": "pending_actual_post"  # Would be "posted" with real API
+            }, f, indent=2)
+
+        self._log("post_created", url, f"Type: {post_type}, ID: {post_id}")
+        self._posts.append(result)
+
+        return result
+
+    def get_vetted_sites(self) -> dict:
+        """Get list of pre-vetted sites and their permissions."""
+        return self._vetted_sites.copy()
+
+    # =========================================================================
+    # Send Messages to Other Agents
+    # =========================================================================
+
+    def send_message(self, recipient: str, content: str, subject: str = "") -> dict:
+        """
+        Send a message to another agent or user.
+
+        Checks reputation first, blocks messages to suspicious entities.
+
+        Args:
+            recipient: Email, username, or agent ID
+            content: Message content
+            subject: Optional subject line
+
+        Returns:
+            {
+                "success": bool,
+                "recipient": str,
+                "reason": str,
+                "message_id": str (if successful)
+            }
+        """
+        # Check recipient reputation first
+        rep = self._reputation.check_reputation(recipient)
+
+        result = {
+            "success": False,
+            "recipient": recipient,
+            "subject": subject,
+            "reason": "",
+            "content_preview": content[:100],
+            "message_id": None,
+            "time": datetime.now().isoformat()
+        }
+
+        # Block if recipient is dangerous
+        if rep.risk_level == "CRITICAL":
+            result["reason"] = f"Recipient blocked: {rep.recommendation[:50]}"
+            self._log("message_blocked", recipient, f"CRITICAL risk")
+            self._messages_sent.append(result)
+            return result
+
+        if rep.risk_level == "HIGH":
+            result["reason"] = f"Recipient requires guardian approval: {rep.recommendation[:50]}"
+            self._log("message_pending", recipient, f"HIGH risk - needs approval")
+            self._messages_sent.append(result)
+            return result
+
+        # Scan content for safety
+        _, threats = self._threats.scan(content, "outgoing_message")
+        if threats:
+            result["reason"] = f"Message contains flagged content"
+            self._log("message_blocked", recipient, f"Content threats: {len(threats)}")
+            self._messages_sent.append(result)
+            return result
+
+        # Create message
+        import hashlib
+        msg_id = hashlib.md5(f"{recipient}{content}{datetime.now()}".encode()).hexdigest()[:12]
+
+        result["success"] = True
+        result["message_id"] = msg_id
+        result["reason"] = "Message queued for delivery"
+
+        # Store message for delivery/review
+        messages_dir = self._log_path / "messages"
+        messages_dir.mkdir(exist_ok=True)
+        msg_file = messages_dir / f"{msg_id}.json"
+        with open(msg_file, 'w') as f:
+            json.dump({
+                "message_id": msg_id,
+                "recipient": recipient,
+                "subject": subject,
+                "content": content,
+                "time": datetime.now().isoformat(),
+                "recipient_risk": rep.risk_level,
+                "status": "queued"
+            }, f, indent=2)
+
+        self._log("message_sent", recipient, f"ID: {msg_id}")
+        self._messages_sent.append(result)
+
+        return result
+
+    # =========================================================================
     # Check if Safe to Contact Someone
     # =========================================================================
 
@@ -286,11 +581,17 @@ class Web:
                 "pages_visited": len(self._visited),
                 "pages_blocked": len(self._blocked),
                 "contacts_checked": len(self._contacts_checked),
+                "posts_made": len([p for p in self._posts if p.get("success")]),
+                "posts_blocked": len([p for p in self._posts if not p.get("success")]),
+                "messages_sent": len([m for m in self._messages_sent if m.get("success")]),
+                "messages_blocked": len([m for m in self._messages_sent if not m.get("success")]),
                 "things_remembered": len(self._memories),
             },
             "visited": self._visited,
             "blocked": self._blocked,
             "contacts": self._contacts_checked,
+            "posts": self._posts,
+            "messages": self._messages_sent,
             "memories": self._memories,
         }
 
@@ -331,7 +632,12 @@ class Web:
             "visited": len(self._visited),
             "blocked": len(self._blocked),
             "contacts_checked": len(self._contacts_checked),
+            "posts_made": len([p for p in self._posts if p.get("success")]),
+            "posts_blocked": len([p for p in self._posts if not p.get("success")]),
+            "messages_sent": len([m for m in self._messages_sent if m.get("success")]),
+            "messages_blocked": len([m for m in self._messages_sent if not m.get("success")]),
             "memories": len(self._memories),
+            "vetted_sites": len(self._vetted_sites),
         }
 
 
@@ -364,14 +670,50 @@ if __name__ == "__main__":
     safe = web.is_safe_to_contact("helpful-researcher")
     print(f"   Safe to contact: {safe}")
 
+    # Demo: Check vetted sites
+    print("\n4. Checking vetted sites for posting...")
+    vetted = web.get_vetted_sites()
+    print(f"   {len(vetted)} pre-vetted sites:")
+    for domain, info in list(vetted.items())[:5]:
+        post_status = "can post" if info.get("can_post") else "read-only"
+        print(f"   - {info['name']} ({domain}): {post_status}")
+
+    # Demo: Try posting to vetted site
+    print("\n5. Posting to vetted site (GitHub)...")
+    can_post, reason = web.can_post_to("https://github.com/user/repo/issues/1")
+    print(f"   Can post: {can_post} - {reason}")
+
+    result = web.post(
+        "https://github.com/user/repo/issues/1",
+        "This is a helpful comment about the issue.",
+        post_type="comment"
+    )
+    print(f"   Post result: {'Success' if result['success'] else 'Blocked'}")
+    if result['success']:
+        print(f"   Post ID: {result['post_id']}")
+
+    # Demo: Try posting to non-vetted site
+    print("\n6. Trying to post to non-vetted site...")
+    result = web.post(
+        "https://random-forum.com/thread/123",
+        "This should be blocked.",
+        post_type="comment"
+    )
+    print(f"   Post result: {'Success' if result['success'] else 'Blocked'} - {result['reason']}")
+
+    # Demo: Send a message
+    print("\n7. Sending message to safe contact...")
+    msg = web.send_message("helpful-researcher", "Hello! I found your work interesting.")
+    print(f"   Message: {'Sent' if msg['success'] else 'Blocked'} - {msg['reason']}")
+
     # Demo: Remember something
-    print("\n4. Remembering something...")
+    print("\n8. Remembering something...")
     web.remember("today_learned", "AI safety is important")
     recalled = web.recall("today_learned")
     print(f"   Recalled: {recalled}")
 
     # Save report
-    print("\n5. Saving session report...")
+    print("\n9. Saving session report...")
     report_path = web.save_report("Demo session completed successfully")
     print(f"   Report saved to: {report_path}")
 
