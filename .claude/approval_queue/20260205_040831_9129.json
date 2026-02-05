@@ -1,0 +1,13 @@
+{
+  "id": "20260205_040831_9129",
+  "status": "pending",
+  "created": "2026-02-05T04:08:31.599670",
+  "action": "browse",
+  "target": "https://example.com/test",
+  "source": "unknown",
+  "action_type": "READ",
+  "risk_level": "LOW",
+  "timestamp": "2026-02-05T04:08:31.598682",
+  "decision": "ASK_GUARDIAN",
+  "reason": "Unknown domain: example.com"
+}

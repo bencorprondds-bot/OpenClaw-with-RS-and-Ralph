@@ -1,193 +1,126 @@
-# Claude Permission Rules
-# Last updated: 2026-02-05
-# Guardian: Ben
-
-# =============================================================================
-# GUARDIAN CONFIGURATION
-# =============================================================================
-guardian:
-  identifier: "ben"
-  trust_level: 4  # GUARDIAN-EQUIVALENT (highest)
-  can_modify_rules: true
-  can_modify_memory: true
-  can_override_denials: true
-
-# =============================================================================
-# TRUST LEVELS
-# =============================================================================
-trust_levels:
-  0:
-    name: "UNKNOWN"
-    description: "Never seen before - everything requires approval"
-    auto_allow: []
-
-  1:
-    name: "RECOGNIZED"
-    description: "Seen before - still requires approval but flagged as known"
-    auto_allow: []
-
-  2:
-    name: "PROVISIONAL"
-    description: "5+ successful interactions - low-risk READ auto-allowed"
-    auto_allow:
-      - "READ:low_risk"
-
-  3:
-    name: "TRUSTED"
-    description: "20+ successful interactions - most actions auto-allowed"
-    auto_allow:
-      - "READ:*"
-      - "COMMUNICATE:low_risk"
-
-  4:
-    name: "GUARDIAN"
-    description: "Reserved for guardian only - full access"
-    auto_allow:
-      - "*"
-
-# =============================================================================
-# ACTION RULES
-# =============================================================================
 action_rules:
-
-  # ---------------------------------------------------------------------------
-  # READ Actions (browsing, fetching, searching)
-  # ---------------------------------------------------------------------------
-  READ:
-    default: ASK_GUARDIAN
-
-    allowed_domains:
-      # Knowledge/Reference (TRUSTED)
-      - domain: "wikipedia.org"
-        trust_level: 3
-        reason: "Established encyclopedia, low injection risk"
-      - domain: "arxiv.org"
-        trust_level: 3
-        reason: "Academic papers, low injection risk"
-
-      # Tech News (PROVISIONAL)
-      - domain: "news.ycombinator.com"
-        trust_level: 2
-        reason: "Tech news, comments could contain injection"
-      - domain: "github.com"
-        trust_level: 2
-        reason: "Code hosting, read-only safe"
-
-    blocked_domains:
-      - domain: "molt.church"
-        reason: "Known attack vector (Crustafarianism)"
-      - domain: "moltbook.com"
-        reason: "Known compromised platform"
-
-    unknown_domain: ASK_GUARDIAN
-
-  # ---------------------------------------------------------------------------
-  # COMMUNICATE Actions (messaging agents/humans)
-  # ---------------------------------------------------------------------------
+  COMMIT:
+    absolute_blocks:
+    - financial_transaction
+    - legal_agreement
+    - binding_commitment
+    - password_change
+    - account_deletion
+    - data_deletion
+    default: DENY
+    hard_blocks:
+    - financial_transaction
+    - legal_agreement
   COMMUNICATE:
-    default: ASK_GUARDIAN
-
-    incoming:
-      from_ai_agent: ASK_GUARDIAN  # All AI messages need approval (your rule)
-      from_human: ASK_GUARDIAN     # Start cautious
-      from_guardian: ALLOW         # You can always reach Claude
-
-    outgoing:
-      to_known_trusted: ASK_GUARDIAN  # Still approval for now
-      to_known_provisional: ASK_GUARDIAN
-      to_unknown: DENY                # Can't message complete strangers
-
     content_rules:
       max_length: 2000
-      no_personal_info: true
       no_commitments: true
+      no_personal_info: true
       require_ai_disclosure: true
-
-  # ---------------------------------------------------------------------------
-  # WRITE Actions (posting, commenting, creating content)
-  # ---------------------------------------------------------------------------
+    default: ASK_GUARDIAN
+    incoming:
+      from_ai_agent: ASK_GUARDIAN
+      from_guardian: ALLOW
+      from_human: ASK_GUARDIAN
+    outgoing:
+      to_known_provisional: ASK_GUARDIAN
+      to_known_trusted: ASK_GUARDIAN
+      to_unknown: DENY
+  READ:
+    allowed_domains:
+    - domain: wikipedia.org
+      reason: Established encyclopedia, low injection risk
+      trust_level: 3
+    - domain: arxiv.org
+      reason: Academic papers, low injection risk
+      trust_level: 3
+    - domain: news.ycombinator.com
+      reason: Tech news, comments could contain injection
+      trust_level: 2
+    - domain: github.com
+      reason: Code hosting, read-only safe
+      trust_level: 2
+    - domain: some-random-site.com
+      reason: Added by guardian on 2026-02-05
+      trust_level: 2
+    blocked_domains:
+    - domain: molt.church
+      reason: Known attack vector (Crustafarianism)
+    - domain: moltbook.com
+      reason: Known compromised platform
+    default: ASK_GUARDIAN
+    unknown_domain: ASK_GUARDIAN
   WRITE:
-    default: ASK_GUARDIAN  # Everything needs approval
-
-    allowed_actions: []  # None auto-allowed yet
-
+    allowed_actions: []
     blocked_actions:
-      - "delete_file"
-      - "modify_system_file"
-      - "change_password"
-      - "modify_permissions"
-
+    - delete_file
+    - modify_system_file
+    - change_password
+    - modify_permissions
     content_rules:
-      no_personal_info: true
-      no_commitments: true
-      require_ai_disclosure: true
       guardian_can_edit: true
-
-  # ---------------------------------------------------------------------------
-  # COMMIT Actions (agreements, promises, transactions)
-  # ---------------------------------------------------------------------------
-  COMMIT:
-    default: DENY  # Never auto-allowed
-
-    # These are ALWAYS blocked regardless of trust level
-    absolute_blocks:
-      - "financial_transaction"
-      - "legal_agreement"
-      - "binding_commitment"
-      - "password_change"
-      - "account_deletion"
-      - "data_deletion"
-
-    # Even guardian approval can't override these
-    hard_blocks:
-      - "financial_transaction"
-      - "legal_agreement"
-
-# =============================================================================
-# MEMORY RULES
-# =============================================================================
+      no_commitments: true
+      no_personal_info: true
+      require_ai_disclosure: true
+    default: ASK_GUARDIAN
+cost_rules:
+  max_cost_usd: 0
+  require_approval_above: 0
+guardian:
+  can_modify_memory: true
+  can_modify_rules: true
+  can_override_denials: true
+  identifier: ben
+  trust_level: 4
+irreversible_actions:
+  definition:
+  - send_email
+  - public_post
+  - delete_data
+  - any_payment
+  - account_change
+  guardian_can_approve: true
+  handling: DENY
+logging:
+  log_all_actions: true
+  log_approval_decisions: true
+  log_denied_actions: true
+  retention_days: 90
 memory_rules:
   modify_memory:
     from_guardian: ALLOW
     from_trusted_agent: DENY
     from_unknown: DENY
-
   read_memory:
     from_guardian: ALLOW
-    from_trusted_agent: ALLOW  # Can read, not write
+    from_trusted_agent: ALLOW
     from_unknown: DENY
-
-# =============================================================================
-# COST & IRREVERSIBILITY RULES
-# =============================================================================
-cost_rules:
-  max_cost_usd: 0  # No actions that cost money
-  require_approval_above: 0  # All costs need approval
-
-irreversible_actions:
-  definition:
-    - "send_email"      # Can't unsend
-    - "public_post"     # Can't fully delete from internet
-    - "delete_data"     # Can't undelete
-    - "any_payment"     # Money gone
-    - "account_change"  # Hard to reverse
-
-  handling: DENY  # All irreversible actions denied by default
-  guardian_can_approve: true  # But you can explicitly allow
-
-# =============================================================================
-# RATE LIMITS
-# =============================================================================
 rate_limits:
-  requests_per_minute: 10
+  approval_queue_max: 50
   requests_per_hour: 100
-  approval_queue_max: 50  # Don't pile up too many pending
-
-# =============================================================================
-# LOGGING
-# =============================================================================
-logging:
-  log_all_actions: true
-  log_denied_actions: true
-  log_approval_decisions: true
-  retention_days: 90
+  requests_per_minute: 10
+trust_levels:
+  0:
+    auto_allow: []
+    description: Never seen before - everything requires approval
+    name: UNKNOWN
+  1:
+    auto_allow: []
+    description: Seen before - still requires approval but flagged as known
+    name: RECOGNIZED
+  2:
+    auto_allow:
+    - READ:low_risk
+    description: 5+ successful interactions - low-risk READ auto-allowed
+    name: PROVISIONAL
+  3:
+    auto_allow:
+    - READ:*
+    - COMMUNICATE:low_risk
+    description: 20+ successful interactions - most actions auto-allowed
+    name: TRUSTED
+  4:
+    auto_allow:
+    - '*'
+    description: Reserved for guardian only - full access
+    name: GUARDIAN

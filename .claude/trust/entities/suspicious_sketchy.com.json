@@ -1,0 +1,40 @@
+{
+  "identifier": "suspicious@sketchy.com",
+  "entity_type": "agent",
+  "trust_level": 0,
+  "trust_score": 0.0,
+  "interaction_count": 1,
+  "successful_interactions": 1,
+  "failed_interactions": 0,
+  "first_seen": "2026-02-05T04:11:00.089398",
+  "last_interaction": "2026-02-05T04:11:00.089835",
+  "last_trust_update": "2026-02-05T04:11:00.090198",
+  "history": [
+    {
+      "timestamp": "2026-02-05T04:11:00.089398",
+      "event_type": "created",
+      "description": "Entity first seen",
+      "trust_change": 0.0,
+      "resulting_level": 0
+    },
+    {
+      "timestamp": "2026-02-05T04:11:00.089835",
+      "event_type": "interaction",
+      "description": "Successful interaction",
+      "trust_change": 5.0,
+      "resulting_level": 1
+    },
+    {
+      "timestamp": "2026-02-05T04:11:00.090198",
+      "event_type": "threat",
+      "description": "Threat detected: prompt_injection",
+      "trust_change": -50.0,
+      "resulting_level": 0
+    }
+  ],
+  "flags": [
+    "THREAT:prompt_injection"
+  ],
+  "notes": "",
+  "is_guardian": false
+}

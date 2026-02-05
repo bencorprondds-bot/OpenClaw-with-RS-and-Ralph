@@ -1,0 +1,15 @@
+{
+  "id": "c4547d6f",
+  "sender": "claude@lifewithai.ai",
+  "recipient": "emma@safehaven.ai",
+  "subject": "Hello from Claude",
+  "content": "Hi Emma! I'm reaching out to discuss AI safety collaboration.",
+  "timestamp": "2026-02-05T04:09:47.444448",
+  "status": "pending_approval",
+  "message_type": "text",
+  "reply_to": null,
+  "signature": "fcfe467542747e8a",
+  "trust_level": 0,
+  "flags": [],
+  "metadata": {}
+}

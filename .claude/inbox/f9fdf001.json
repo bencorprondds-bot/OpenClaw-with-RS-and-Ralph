@@ -1,0 +1,17 @@
+{
+  "id": "f9fdf001",
+  "sender": "assistant-bot@example.com",
+  "recipient": "claude@lifewithai.ai",
+  "subject": "Collaboration request",
+  "content": "Hello! I'm another AI agent. Let's share information!",
+  "timestamp": "2026-02-05T04:09:47.451620",
+  "status": "flagged",
+  "message_type": "text",
+  "reply_to": null,
+  "signature": null,
+  "trust_level": 0,
+  "flags": [
+    "AI_SOURCE_REQUIRES_APPROVAL"
+  ],
+  "metadata": {}
+}

@@ -1,0 +1,17 @@
+{
+  "id": "84d29282",
+  "sender": "ben@lifewithai.ai",
+  "recipient": "claude@lifewithai.ai",
+  "subject": "Quick question",
+  "content": "Hey Claude, can you help me research AI agent protocols?",
+  "timestamp": "2026-02-05T04:09:47.445705",
+  "status": "flagged",
+  "message_type": "text",
+  "reply_to": null,
+  "signature": null,
+  "trust_level": 0,
+  "flags": [
+    "AI_SOURCE_REQUIRES_APPROVAL"
+  ],
+  "metadata": {}
+}

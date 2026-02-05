@@ -1,6 +1,6 @@
 {
   "id": "20260205_023737_6291",
-  "status": "pending",
+  "status": "approved",
   "created": "2026-02-05T02:37:37.888698",
   "action": "browse",
   "target": "https://some-random-site.com/page",
@@ -9,5 +9,7 @@
   "risk_level": "LOW",
   "timestamp": "2026-02-05T02:37:37.887835",
   "decision": "ASK_GUARDIAN",
-  "reason": "Unknown domain: some-random-site.com"
+  "reason": "Unknown domain: some-random-site.com",
+  "approved_at": "2026-02-05T04:07:36.395050",
+  "approved_by": "guardian"
 }
