@@ -5,6 +5,7 @@ This package provides:
 - Permission checking and approval workflows
 - Content sanitization for threat detection
 - Safe web browsing with injection protection
+- PRE-VISIT SITE SCANNING (scan before you enter!)
 - Agent-to-agent messaging with security
 - Trust ledger for entity tracking
 - Threat signature database with 22+ signatures
@@ -15,20 +16,22 @@ Usage:
 
     g = Guardian()
 
-    # Browse safely
+    # Pre-scan a site before visiting (like scanning a room before entering)
+    scan = g.pre_scan("https://example.com")
+    if scan["is_safe"]:
+        result = g.browse("https://example.com")
+
+    # Or just browse (pre-scan happens automatically)
     result = g.browse("https://wikipedia.org/wiki/AI")
+
+    # Quick check without full scan
+    risk, reason = g.quick_check("https://sketchy-site.xyz")
 
     # Send message (requires approval)
     g.message("agent@example.com", "Hello!")
 
     # Check pending approvals
     g.status()
-
-    # Scan for threats
-    threats = g.threats.scan("some content")
-
-    # Get notifications
-    g.notifications.notify_approval_needed(...)
 """
 
 from pathlib import Path
@@ -56,6 +59,7 @@ class Guardian:
         self._threat_db = None
         self._notifications = None
         self._monitor = None
+        self._site_scanner = None
         self._cli = None
 
     def _find_claude_dir(self) -> str:
@@ -134,18 +138,61 @@ class Guardian:
             self._monitor = ActivityMonitor(str(self.base_path))
         return self._monitor
 
+    @property
+    def scanner(self):
+        """Site scanner for pre-visit threat detection."""
+        if self._site_scanner is None:
+            from .site_scanner import SiteScanner
+            self._site_scanner = SiteScanner(str(self.base_path))
+        return self._site_scanner
+
     # =========================================================================
     # High-Level API
     # =========================================================================
 
-    def browse(self, url: str) -> dict:
+    def pre_scan(self, url: str, deep_scan: bool = False) -> dict:
+        """
+        Pre-scan a website before visiting.
+
+        Like sending a security team to scan a room before the VIP enters.
+        Checks for malicious content, SSL issues, blocklist matches, etc.
+
+        Args:
+            url: URL to scan
+            deep_scan: If True, fetch content preview for deeper analysis
+
+        Returns:
+            dict with is_safe, risk_level (LOW/MEDIUM/HIGH/CRITICAL),
+            risk_score (0-100), threats, and recommendations
+        """
+        return self.browser.pre_scan(url, deep_scan)
+
+    def quick_check(self, url: str) -> tuple:
+        """
+        Quick risk check without full scan.
+
+        Args:
+            url: URL to check
+
+        Returns:
+            (risk_level, reason) tuple
+        """
+        return self.browser.quick_check(url)
+
+    def browse(self, url: str, skip_pre_scan: bool = False) -> dict:
         """
         Browse a URL with permission checking and sanitization.
 
+        Now includes automatic PRE-SCANNING before visiting.
+
+        Args:
+            url: URL to visit
+            skip_pre_scan: If True, skip the pre-visit scan
+
         Returns:
-            dict with status, content (if allowed), and any warnings
+            dict with status, content (if allowed), pre_scan results, and any warnings
         """
-        return self.browser.fetch(url)
+        return self.browser.fetch(url, skip_pre_scan=skip_pre_scan)
 
     def check(self, action: str, target: str) -> dict:
         """

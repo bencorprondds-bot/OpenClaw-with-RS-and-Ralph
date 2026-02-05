@@ -3,16 +3,22 @@
 Safe Browser for Claude Agent Autonomy
 
 A secure wrapper for web browsing that:
-1. Checks permissions before fetching
-2. Sanitizes content to remove threats
-3. Queues unknown sites for guardian approval
-4. Logs all activity
+1. PRE-SCANS sites before visiting (like scanning a room before entering)
+2. Checks permissions before fetching
+3. Sanitizes content to remove threats
+4. Queues unknown sites for guardian approval
+5. Logs all activity
 
 Usage:
     browser = SafeBrowser()
     result = browser.fetch("https://example.com")
     if result["status"] == "allowed":
         content = result["content"]  # Safe, sanitized content
+
+    # Or scan without visiting:
+    scan_result = browser.pre_scan("https://example.com")
+    if scan_result["is_safe"]:
+        result = browser.fetch("https://example.com")
 """
 
 import json
@@ -22,13 +28,14 @@ import urllib.error
 import ssl
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, Tuple
 from urllib.parse import urlparse
 import html.parser
 
 # Import our modules
 from permission_checker import PermissionChecker, Decision
 from content_sanitizer import ContentSanitizer, ThreatLevel
+from site_scanner import SiteScanner, RiskLevel
 
 
 class SimpleHTMLParser(html.parser.HTMLParser):
@@ -61,9 +68,11 @@ class SimpleHTMLParser(html.parser.HTMLParser):
 class SafeBrowser:
     """
     Safe web browsing for Claude with permission checks and content sanitization.
+
+    Now includes PRE-SCANNING - like scanning a room for threats before entering.
     """
 
-    def __init__(self, base_path: str = None):
+    def __init__(self, base_path: str = None, enable_pre_scan: bool = True):
         self.permission_checker = PermissionChecker(base_path)
         self.sanitizer = ContentSanitizer()
 
@@ -72,6 +81,10 @@ class SafeBrowser:
             self.base_path = Path(base_path).parent
         else:
             self.base_path = self._find_claude_dir()
+
+        # Initialize site scanner for pre-visit checks
+        self.enable_pre_scan = enable_pre_scan
+        self.scanner = SiteScanner(str(self.base_path)) if enable_pre_scan else None
 
         self.activity_log_path = self.base_path / "activity_log"
         self.approval_queue_path = self.base_path / "approval_queue"
@@ -89,6 +102,7 @@ class SafeBrowser:
             "denied": 0,
             "pending": 0,
             "threats_detected": 0,
+            "pre_scan_blocked": 0,
         }
 
     def _find_claude_dir(self) -> Path:
@@ -101,18 +115,68 @@ class SafeBrowser:
             current = current.parent
         return Path(".claude")
 
-    def fetch(self, url: str, timeout: int = 30) -> Dict[str, Any]:
+    def pre_scan(self, url: str, deep_scan: bool = False) -> Dict[str, Any]:
         """
-        Fetch a URL with permission checking and content sanitization.
+        Pre-scan a URL without visiting it.
+
+        Like sending a security team to scan a room before the VIP enters.
+
+        Args:
+            url: URL to scan
+            deep_scan: If True, fetch content preview for analysis
 
         Returns:
             {
-                "status": "allowed" | "denied" | "pending" | "error",
+                "url": str,
+                "is_safe": bool,
+                "risk_level": str,  # LOW, MEDIUM, HIGH, CRITICAL
+                "risk_score": int,  # 0-100
+                "threats": list,
+                "recommendations": list,
+                "can_proceed": bool,  # True if LOW or MEDIUM
+            }
+        """
+        if not self.scanner:
+            return {
+                "url": url,
+                "is_safe": True,
+                "risk_level": "UNKNOWN",
+                "risk_score": 0,
+                "threats": [],
+                "recommendations": ["Pre-scanning disabled"],
+                "can_proceed": True,
+            }
+
+        scan_result = self.scanner.scan(url, deep_scan=deep_scan)
+
+        return {
+            "url": url,
+            "is_safe": scan_result.is_safe,
+            "risk_level": scan_result.risk_level,
+            "risk_score": scan_result.risk_score,
+            "threats": scan_result.threats_found,
+            "recommendations": scan_result.recommendations,
+            "can_proceed": scan_result.risk_level in ["LOW", "MEDIUM"],
+            "ssl_valid": scan_result.ssl_info.get("is_valid", False),
+            "domain": scan_result.domain,
+        }
+
+    def fetch(self, url: str, timeout: int = 30, skip_pre_scan: bool = False) -> Dict[str, Any]:
+        """
+        Fetch a URL with permission checking and content sanitization.
+
+        Now includes PRE-SCANNING by default - checking the site for threats
+        before actually visiting it.
+
+        Returns:
+            {
+                "status": "allowed" | "denied" | "pending" | "error" | "blocked_by_scan",
                 "url": str,
                 "content": str | None,  # Sanitized content if allowed
                 "threat_level": str,
                 "message": str,
                 "request_id": str | None,  # If pending approval
+                "pre_scan": dict | None,  # Pre-scan results if performed
             }
         """
         self.stats["requests"] += 1
@@ -125,7 +189,43 @@ class SafeBrowser:
             "threat_level": "NONE",
             "message": None,
             "request_id": None,
+            "pre_scan": None,
         }
+
+        # Step 0: PRE-SCAN - Check site before visiting
+        if self.enable_pre_scan and not skip_pre_scan:
+            pre_scan_result = self.pre_scan(url, deep_scan=False)
+            result["pre_scan"] = pre_scan_result
+
+            if pre_scan_result["risk_level"] == "CRITICAL":
+                self.stats["pre_scan_blocked"] += 1
+                self.stats["denied"] += 1
+                result["status"] = "blocked_by_scan"
+                result["threat_level"] = "CRITICAL"
+                result["message"] = f"Site blocked by pre-scan: {', '.join(r for r in pre_scan_result['recommendations'][:2])}"
+                self._log_fetch(result)
+                return result
+
+            if pre_scan_result["risk_level"] == "HIGH":
+                # Queue for guardian approval
+                self.stats["pending"] += 1
+                result["status"] = "pending"
+                result["threat_level"] = "HIGH"
+                result["message"] = f"Pre-scan detected HIGH risk - requires guardian approval"
+
+                # Create approval request
+                scan_request = {
+                    "action": "browse",
+                    "target": url,
+                    "action_type": "READ",
+                    "risk_level": "HIGH",
+                    "reason": f"Pre-scan risk: {pre_scan_result['risk_level']} (score: {pre_scan_result['risk_score']})",
+                    "threats": [t.get("detail", str(t)) for t in pre_scan_result["threats"][:5]],
+                    "scan_result": pre_scan_result,
+                }
+                result["request_id"] = self.permission_checker.queue_for_approval(scan_request)
+                self._log_fetch(result)
+                return result
 
         # Step 1: Check permissions
         perm_result = self.permission_checker.check_action("browse", url)
@@ -283,6 +383,23 @@ class SafeBrowser:
     def get_stats(self) -> Dict:
         """Get browser statistics."""
         return self.stats.copy()
+
+    def quick_check(self, url: str) -> Tuple[str, str]:
+        """
+        Quick risk check without full scan.
+
+        Returns:
+            (risk_level, reason) tuple
+        """
+        if self.scanner:
+            return self.scanner.quick_check(url)
+        return ("UNKNOWN", "Pre-scanning disabled")
+
+    def add_to_blocklist(self, domain: str, category: str = "custom") -> bool:
+        """Add a domain to the blocklist."""
+        if self.scanner:
+            return self.scanner.add_to_blocklist(domain, category)
+        return False
 
 
 def demo():
