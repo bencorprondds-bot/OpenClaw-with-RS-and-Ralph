@@ -1,0 +1,13 @@
+{
+  "id": "mem_000000",
+  "key": "test_key",
+  "content": "Hello from the test",
+  "memory_type": "working",
+  "timestamp": "2026-02-05T04:42:14.960812",
+  "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "current_hash": "90fbec7e92110d2feb1583d4fc6849e7b735c9e32e02739429edd06069532f2c",
+  "signature": null,
+  "signed_by": null,
+  "expires": "2026-02-06T04:42:14.960864",
+  "metadata": {}
+}
