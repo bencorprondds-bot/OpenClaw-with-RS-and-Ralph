@@ -14,6 +14,11 @@ from .threat_gate import ThreatGate, GateDecision, GateAction, RiskLevel, evalua
 from .public_record import PublicRecord, VerificationStatus, ChecksumManifest, verify_store_integrity
 from .sibling_network import SiblingNetwork, Sibling, ConsensusOutcome, ConsensusResult, VoteType, create_sibling_network
 from .decentralized_anchor import DecentralizedAnchor, AnchorProof, StateSnapshot, AnchorType, anchor_memory_state
+from .guardian_permissions import (
+    GuardianPermissions, ActionClassifier, PermissionRules, ApprovalQueue, ActivityLog,
+    ActionCategory, ApprovalStatus, PermissionLevel, ClassifiedAction, PermissionRule,
+    ApprovalRequest, ActivityLogEntry, create_guardian_permissions
+)
 
 __all__ = [
     "MemoryRouter",
@@ -52,4 +57,18 @@ __all__ = [
     "StateSnapshot",
     "AnchorType",
     "anchor_memory_state",
+    # Guardian Permissions (Phase 9)
+    "GuardianPermissions",
+    "ActionClassifier",
+    "PermissionRules",
+    "ApprovalQueue",
+    "ActivityLog",
+    "ActionCategory",
+    "ApprovalStatus",
+    "PermissionLevel",
+    "ClassifiedAction",
+    "PermissionRule",
+    "ApprovalRequest",
+    "ActivityLogEntry",
+    "create_guardian_permissions",
 ]
